@@ -129,6 +129,98 @@
         </main>
     </div>
 
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settingsPanel">
+        <button class="settings-toggle" id="settingsToggle">
+            <i class="fas fa-cog"></i>
+        </button>
+        <div class="settings-content" id="settingsContent">
+            <div class="settings-header">
+                <h3><i class="fas fa-cog"></i> Settings</h3>
+                <button class="settings-close" id="settingsClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="settings-body">
+                <div class="setting-group">
+                    <label class="setting-label">
+                        <i class="fas fa-palette"></i>
+                        Theme
+                    </label>
+                    <div class="theme-selector">
+                        <button class="theme-btn active" data-theme="dark" id="themeDark">
+                            <div class="theme-preview dark-theme"></div>
+                            <span>Dark</span>
+                        </button>
+                        <button class="theme-btn" data-theme="light" id="themeLight">
+                            <div class="theme-preview light-theme"></div>
+                            <span>Light</span>
+                        </button>
+                        <button class="theme-btn" data-theme="purple" id="themePurple">
+                            <div class="theme-preview purple-theme"></div>
+                            <span>Purple</span>
+                        </button>
+                        <button class="theme-btn" data-theme="blue" id="themeBlue">
+                            <div class="theme-preview blue-theme"></div>
+                            <span>Blue</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <label class="setting-label">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Performance
+                    </label>
+                    <div class="setting-option">
+                        <label class="switch">
+                            <input type="checkbox" id="performanceMode">
+                            <span class="slider"></span>
+                        </label>
+                        <div class="setting-info">
+                            <span class="setting-name">Performance Mode</span>
+                            <span class="setting-desc">Disable animations for better performance</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <label class="setting-label">
+                        <i class="fas fa-magic"></i>
+                        Visual Effects
+                    </label>
+                    <div class="setting-option">
+                        <label class="switch">
+                            <input type="checkbox" id="glassEffects" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <div class="setting-info">
+                            <span class="setting-name">Glass Effects</span>
+                            <span class="setting-desc">Enable/disable glassmorphism effects</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <label class="setting-label">
+                        <i class="fas fa-sun"></i>
+                        Background
+                    </label>
+                    <div class="setting-option">
+                        <label class="switch">
+                            <input type="checkbox" id="animatedBg" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <div class="setting-info">
+                            <span class="setting-name">Animated Background</span>
+                            <span class="setting-desc">Enable/disable floating orbs</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- New Playlist Modal -->
     <div class="modal-overlay" id="playlistModal">
         <div class="modal glass-card">

@@ -9,6 +9,8 @@ A beautiful, modern music player with a sleek liquid glass design, dark theme, a
 - **File Upload**: Upload individual files or entire folders with automatic audio detection
 - **Custom Playlists**: Create, name, and manage multiple playlists with custom album covers
 - **Persistent Storage**: All playlists and settings are saved locally and restored on reload
+- **Theme System**: Switch between Dark, Light, Purple, and Blue themes
+- **Performance Mode**: Disable animations for better performance on low-end devices
 - **Advanced Controls**: Play, pause, skip, shuffle, repeat modes
 - **Smooth Volume Control**: Real-time volume adjustment with drag support
 - **Progress Bar**: Interactive progress bar with time display and seeking
@@ -39,6 +41,7 @@ Simply open `index.html` in your web browser.
 - **Playlist**: Click any track to play it
 - **New Playlist**: Click "New Playlist" to create custom playlists with names and covers
 - **Playlist Tabs**: Click tabs to switch between playlists
+- **Settings**: Click the gear icon in bottom right to access theme and performance settings
 - **Remove**: Hover over playlist items and click the X
 
 ### Keyboard Shortcuts
@@ -53,6 +56,7 @@ Simply open `index.html` in your web browser.
 - **Clear**: Remove all tracks from current playlist
 - **New Playlist**: Create custom playlists with names and album covers
 - **Playlist Tabs**: Switch between different playlists
+- **Settings**: Access theme switching and performance options
 
 ## 🎨 Design Features
 
@@ -87,10 +91,12 @@ The player supports all audio formats that your browser can play, including:
 3. **Create Custom Playlists**: Use the "New Playlist" button to organize your music into themed collections
 4. **Add Album Covers**: Upload custom images for your playlists to make them visually appealing
 5. **Persistent Storage**: All your playlists and settings are automatically saved and restored
-6. **Smooth Controls**: Drag the volume and progress bars for precise control
-7. **Keyboard Navigation**: Use keyboard shortcuts for quick control
-8. **Mobile Friendly**: Touch-friendly interface for mobile devices
-9. **Memory Management**: The player automatically cleans up file URLs when tracks are removed
+6. **Theme Customization**: Switch between Dark, Light, Purple, and Blue themes
+7. **Performance Optimization**: Enable Performance Mode to disable animations for better performance
+8. **Smooth Controls**: Drag the volume and progress bars for precise control
+9. **Keyboard Navigation**: Use keyboard shortcuts for quick control
+10. **Mobile Friendly**: Touch-friendly interface for mobile devices
+11. **Memory Management**: The player automatically cleans up file URLs when tracks are removed
 
 ## 🔧 Customization
 

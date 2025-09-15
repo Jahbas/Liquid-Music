@@ -16,6 +16,7 @@ class MusicPlayer {
         this.bindEvents();
         this.setupAudio();
         this.loadFromStorage();
+        this.loadSettings();
     }
 
     initializeElements() {
@@ -66,6 +67,16 @@ class MusicPlayer {
         this.modalClose = document.getElementById('modalClose');
         this.cancelPlaylist = document.getElementById('cancelPlaylist');
         this.createPlaylist = document.getElementById('createPlaylist');
+        
+        // Settings elements
+        this.settingsPanel = document.getElementById('settingsPanel');
+        this.settingsToggle = document.getElementById('settingsToggle');
+        this.settingsContent = document.getElementById('settingsContent');
+        this.settingsClose = document.getElementById('settingsClose');
+        this.performanceMode = document.getElementById('performanceMode');
+        this.glassEffects = document.getElementById('glassEffects');
+        this.animatedBg = document.getElementById('animatedBg');
+        this.themeButtons = document.querySelectorAll('.theme-btn');
     }
 
     bindEvents() {
@@ -118,6 +129,29 @@ class MusicPlayer {
         this.playlistModal.addEventListener('click', (e) => {
             if (e.target === this.playlistModal) {
                 this.hidePlaylistModal();
+            }
+        });
+        
+        // Settings events
+        this.settingsToggle.addEventListener('click', () => this.toggleSettings());
+        this.settingsClose.addEventListener('click', () => this.hideSettings());
+        this.performanceMode.addEventListener('change', () => this.togglePerformanceMode());
+        this.glassEffects.addEventListener('change', () => this.toggleGlassEffects());
+        this.animatedBg.addEventListener('change', () => this.toggleAnimatedBackground());
+        
+        // Theme buttons
+        this.themeButtons.forEach(btn => {
+            btn.addEventListener('click', () => this.changeTheme(btn.dataset.theme));
+        });
+        
+        // Settings panel overlay click to close
+        this.settingsContent.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+        
+        this.settingsPanel.addEventListener('click', (e) => {
+            if (e.target === this.settingsPanel) {
+                this.hideSettings();
             }
         });
     }
@@ -648,6 +682,113 @@ class MusicPlayer {
             this.renderPlaylistTabs();
             this.saveToStorage();
         }
+    }
+
+    // Settings Management
+    toggleSettings() {
+        this.settingsContent.classList.toggle('active');
+    }
+
+    hideSettings() {
+        this.settingsContent.classList.remove('active');
+    }
+
+    changeTheme(theme) {
+        // Remove existing theme classes
+        document.body.classList.remove('dark-theme', 'light-theme', 'purple-theme', 'blue-theme');
+        
+        // Add new theme class
+        if (theme !== 'dark') {
+            document.body.classList.add(theme + '-theme');
+        }
+        
+        // Update active theme button
+        this.themeButtons.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.theme === theme) {
+                btn.classList.add('active');
+            }
+        });
+        
+        this.saveSettings();
+    }
+
+    togglePerformanceMode() {
+        if (this.performanceMode.checked) {
+            document.body.classList.add('performance-mode');
+        } else {
+            document.body.classList.remove('performance-mode');
+        }
+        this.saveSettings();
+    }
+
+    toggleGlassEffects() {
+        if (this.glassEffects.checked) {
+            document.body.classList.remove('no-glass');
+        } else {
+            document.body.classList.add('no-glass');
+        }
+        this.saveSettings();
+    }
+
+    toggleAnimatedBackground() {
+        if (this.animatedBg.checked) {
+            document.body.classList.remove('no-bg');
+        } else {
+            document.body.classList.add('no-bg');
+        }
+        this.saveSettings();
+    }
+
+    saveSettings() {
+        const settings = {
+            theme: this.getCurrentTheme(),
+            performanceMode: this.performanceMode.checked,
+            glassEffects: this.glassEffects.checked,
+            animatedBg: this.animatedBg.checked
+        };
+        localStorage.setItem('musicPlayerSettings', JSON.stringify(settings));
+    }
+
+    loadSettings() {
+        try {
+            const settings = localStorage.getItem('musicPlayerSettings');
+            if (settings) {
+                const parsed = JSON.parse(settings);
+                
+                // Apply theme
+                if (parsed.theme) {
+                    this.changeTheme(parsed.theme);
+                }
+                
+                // Apply performance mode
+                if (parsed.performanceMode !== undefined) {
+                    this.performanceMode.checked = parsed.performanceMode;
+                    this.togglePerformanceMode();
+                }
+                
+                // Apply glass effects
+                if (parsed.glassEffects !== undefined) {
+                    this.glassEffects.checked = parsed.glassEffects;
+                    this.toggleGlassEffects();
+                }
+                
+                // Apply animated background
+                if (parsed.animatedBg !== undefined) {
+                    this.animatedBg.checked = parsed.animatedBg;
+                    this.toggleAnimatedBackground();
+                }
+            }
+        } catch (error) {
+            console.error('Error loading settings:', error);
+        }
+    }
+
+    getCurrentTheme() {
+        if (document.body.classList.contains('light-theme')) return 'light';
+        if (document.body.classList.contains('purple-theme')) return 'purple';
+        if (document.body.classList.contains('blue-theme')) return 'blue';
+        return 'dark';
     }
 
     // Storage Management
