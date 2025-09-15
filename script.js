@@ -1264,19 +1264,34 @@ class MusicPlayer {
         });
 
         document.addEventListener('dragenter', (e) => {
-            dragCounter++;
-            if (dragCounter === 1) {
-                showOverlay();
+            // Only show overlay for external file drops, not internal drag operations
+            const hasFiles = e.dataTransfer.types.includes('Files') || 
+                           e.dataTransfer.types.includes('application/x-moz-file');
+            const isInternalDrag = e.dataTransfer.getData('text/plain');
+            
+            if (hasFiles && !isInternalDrag) {
+                dragCounter++;
+                if (dragCounter === 1) {
+                    showOverlay();
+                }
             }
         });
         
         document.addEventListener('dragover', (e) => {
-            e.dataTransfer.dropEffect = 'copy';
+            // Only set copy effect for external files
+            const hasFiles = e.dataTransfer.types.includes('Files') || 
+                           e.dataTransfer.types.includes('application/x-moz-file');
+            const isInternalDrag = e.dataTransfer.getData('text/plain');
+            
+            if (hasFiles && !isInternalDrag) {
+                e.dataTransfer.dropEffect = 'copy';
+            }
         });
         
         document.addEventListener('dragleave', (e) => {
-            dragCounter--;
-            if (dragCounter === 0) {
+            // Only hide overlay if we're leaving the document entirely
+            if (!e.relatedTarget || !document.contains(e.relatedTarget)) {
+                dragCounter = 0;
                 hideOverlay();
             }
         });
@@ -1286,6 +1301,13 @@ class MusicPlayer {
             hideOverlay();
             const dt = e.dataTransfer;
             if (!dt) return;
+            
+            // Check if this is an internal drag operation
+            const isInternalDrag = dt.getData('text/plain');
+            if (isInternalDrag) {
+                // This is handled by the playlist item drop handlers
+                return;
+            }
             
             const items = dt.items && dt.items.length ? Array.from(dt.items) : [];
             const files = dt.files && dt.files.length ? Array.from(dt.files) : [];
