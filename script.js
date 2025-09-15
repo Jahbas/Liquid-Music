@@ -459,7 +459,12 @@ class MusicPlayer {
 
         const [track] = sourceArr.splice(sourceIndex, 1);
         if (!track) return;
-        targetArr.push(track);
+        // Insert at front when moving into Current Queue, otherwise append
+        if (targetId === 'current') {
+            targetArr.unshift(track);
+        } else {
+            targetArr.push(track);
+        }
 
         // Adjust current track index and playback if we moved from the currently viewed playlist
         if (this.currentPlaylistId === sourceId) {
@@ -475,6 +480,12 @@ class MusicPlayer {
                     if (this.isPlaying) this.play();
                 }
             }
+        }
+
+        // If we inserted at the front of the currently viewed playlist,
+        // shift currentTrackIndex to keep the same song highlighted/playing
+        if (this.currentPlaylistId === targetId && targetId === 'current') {
+            this.currentTrackIndex++;
         }
 
         this.saveToStorage();
