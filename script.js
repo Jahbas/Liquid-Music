@@ -583,6 +583,8 @@ class MusicPlayer {
         }
 
         this.saveToStorage();
+        const targetLabel = targetId === 'current' ? 'Queue' : (this.customPlaylists.get(targetId)?.name || 'Playlist');
+        this.showNotification(`Moved 1 track to ${targetLabel}`, 'fa-arrow-right');
         // Re-render affected views
         this.renderPlaylistTabs();
         if (this.currentPlaylistId === sourceId || this.currentPlaylistId === targetId) {
@@ -650,6 +652,9 @@ class MusicPlayer {
         }
 
         this.saveToStorage();
+        const count = tracksToMove.length;
+        const targetLabel = targetId === 'current' ? 'Queue' : (this.customPlaylists.get(targetId)?.name || 'Playlist');
+        this.showNotification(`Moved ${count} track${count>1?'s':''} to ${targetLabel}`, 'fa-layer-group');
         // Re-render affected views
         this.renderPlaylistTabs();
         if (this.currentPlaylistId === sourceId || this.currentPlaylistId === targetId) {
@@ -965,6 +970,28 @@ class MusicPlayer {
     updateTrackInfo(title, artist) {
         this.trackTitle.textContent = title;
         this.trackArtist.textContent = artist;
+    }
+
+    // Toast notifications
+    showNotification(message, icon = 'fa-check-circle') {
+        try {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = 'toast glass-card';
+            toast.innerHTML = `
+                <span class="icon"><i class="fas ${icon}"></i></span>
+                <span class="message">${message}</span>
+                <button class="close" title="Dismiss">×</button>
+            `;
+            container.appendChild(toast);
+            const remove = () => {
+                toast.style.animation = 'toast-out 180ms ease forwards';
+                setTimeout(() => toast.remove(), 200);
+            };
+            toast.querySelector('.close').addEventListener('click', remove);
+            setTimeout(remove, 2800);
+        } catch (_) {}
     }
 
     handleAudioError(error) {
