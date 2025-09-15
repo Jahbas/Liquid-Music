@@ -87,6 +87,11 @@ class MusicPlayer {
         this.setupAudio();
         this.loadFromStorage();
         this.loadSettings();
+        
+        // Set default theme if none is loaded
+        if (!document.body.getAttribute('data-theme')) {
+            document.body.setAttribute('data-theme', 'glass');
+        }
     }
 
     initializeElements() {
@@ -154,10 +159,8 @@ class MusicPlayer {
         this.performanceMode = document.getElementById('performanceMode');
         this.glassEffects = document.getElementById('glassEffects');
         this.animatedBg = document.getElementById('animatedBg');
-        this.themeButtons = [];
-        this.themeLabel = null;
-        this.themeCollapseArrow = null;
-        this.themeSelector = { classList: { contains: () => false } };
+        this.themeButtons = document.querySelectorAll('.theme-btn');
+        this.currentTheme = 'glass';
 
         // Logs UI elements
         this.logsToggle = document.getElementById('logsToggle');
@@ -273,7 +276,10 @@ class MusicPlayer {
         this.glassEffects.addEventListener('change', () => this.toggleGlassEffects());
         this.animatedBg.addEventListener('change', () => this.toggleAnimatedBackground());
         
-        // Theme system removed; dark theme only
+        // Theme events
+        this.themeButtons.forEach(button => {
+            button.addEventListener('click', () => this.changeTheme(button.dataset.theme));
+        });
         
         // Settings panel overlay click to close
         this.settingsContent.addEventListener('click', (e) => {
@@ -1793,13 +1799,34 @@ class MusicPlayer {
         this.saveSettings();
     }
 
+    changeTheme(theme) {
+        // Remove current theme class
+        document.body.classList.remove(`theme-${this.currentTheme}`);
+        document.body.removeAttribute('data-theme');
+        
+        // Set new theme
+        this.currentTheme = theme;
+        document.body.setAttribute('data-theme', theme);
+        
+        // Update active button
+        this.themeButtons.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.theme === theme) {
+                btn.classList.add('active');
+            }
+        });
+        
+        this.saveSettings();
+        const themeName = theme === 'glass' ? 'Glass' : 'Dark';
+        this.showNotification(`Switched to ${themeName} theme`, 'fa-palette');
+    }
+
     saveSettings() {
         const settings = {
-            // theme removed (always dark)
+            theme: this.currentTheme,
             performanceMode: this.performanceMode.checked,
             glassEffects: this.glassEffects.checked,
-            animatedBg: this.animatedBg.checked,
-            themeSectionCollapsed: false
+            animatedBg: this.animatedBg.checked
         };
         localStorage.setItem('musicPlayerSettings', JSON.stringify(settings));
     }
@@ -1824,7 +1851,23 @@ class MusicPlayer {
             if (settings) {
                 const parsed = JSON.parse(settings);
                 
-                // Theme ignored; always dark
+                // Apply theme
+                if (parsed.theme) {
+                    this.currentTheme = parsed.theme;
+                    document.body.setAttribute('data-theme', parsed.theme);
+                } else {
+                    // Set default theme if none saved
+                    this.currentTheme = 'glass';
+                    document.body.setAttribute('data-theme', 'glass');
+                }
+                
+                // Update active button
+                this.themeButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.theme === this.currentTheme) {
+                        btn.classList.add('active');
+                    }
+                });
                 
                 // Apply performance mode
                 if (parsed.performanceMode !== undefined) {
@@ -1843,20 +1886,33 @@ class MusicPlayer {
                     this.animatedBg.checked = parsed.animatedBg;
                     this.toggleAnimatedBackground();
                 }
-                
-                // Apply theme section collapse state
-                if (parsed.themeSectionCollapsed !== undefined && parsed.themeSectionCollapsed) {
-                    this.themeSelector.classList.add('collapsed');
-                    this.themeCollapseArrow.classList.add('rotated');
-                }
+            } else {
+                // No settings saved, apply defaults
+                this.currentTheme = 'glass';
+                document.body.setAttribute('data-theme', 'glass');
+                this.themeButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.theme === 'glass') {
+                        btn.classList.add('active');
+                    }
+                });
             }
         } catch (error) {
             console.error('Error loading settings:', error);
+            // Apply defaults on error
+            this.currentTheme = 'glass';
+            document.body.setAttribute('data-theme', 'glass');
+            this.themeButtons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.theme === 'glass') {
+                    btn.classList.add('active');
+                }
+            });
         }
     }
 
     getCurrentTheme() {
-        return 'dark';
+        return this.currentTheme;
     }
 
     // Storage Management
