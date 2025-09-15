@@ -251,6 +251,13 @@
         </a>
     </div>
 
+    <!-- Logs Button -->
+    <div class="logs-panel">
+        <button id="logsToggle" class="logs-btn" title="Open Action Logs">
+            <i class="fas fa-clipboard-list"></i>
+        </button>
+    </div>
+
     <!-- New Playlist Modal -->
     <div class="modal-overlay" id="playlistModal">
         <div class="modal glass-card">
@@ -282,6 +289,43 @@
                 <div class="modal-actions">
                     <button class="btn btn-secondary" id="cancelPlaylist">Cancel</button>
                     <button class="btn btn-primary" id="createPlaylist">Create Playlist</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs Modal -->
+    <div class="modal-overlay" id="logsModal">
+        <div class="modal glass-card">
+            <div class="modal-header">
+                <h3><i class="fas fa-clipboard-list"></i> Action Logs</h3>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <button class="btn btn-secondary" id="logsClear">Clear Logs</button>
+                    <button class="modal-close" id="logsClose"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <div class="modal-content">
+                <div class="logs-toolbar">
+                    <span class="logs-hint">All actions are saved and can be undone.</span>
+                </div>
+                <div class="logs-list" id="logsList">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal glass-card">
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle"></i> Confirm Action</h3>
+            </div>
+            <div class="modal-content">
+                <p id="confirmMessage">Are you sure?</p>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" id="confirmCancel">Cancel</button>
+                    <button class="btn btn-primary" id="confirmOk">Confirm</button>
                 </div>
             </div>
         </div>
