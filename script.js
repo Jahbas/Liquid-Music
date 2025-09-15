@@ -74,6 +74,7 @@ class MusicPlayer {
         this.selectedTracks = new Set(); // Track indices of selected songs
         this.isMultiSelecting = false;
         this.isDragging = false; // whether a native drag is in progress
+        this.confirmDialogCallback = null; // Callback function for confirmation dialog
         this.dragStartIndex = null; // index of the item where drag began
         this.stackModeActive = false; // user pressed Ctrl during drag to stack
         this.db = db;
@@ -101,6 +102,12 @@ class MusicPlayer {
         this.volumeBtn = document.getElementById('volumeBtn');
         this.clearBtn = document.getElementById('clearBtn');
         this.newPlaylistBtn = document.getElementById('newPlaylistBtn');
+        
+        // Confirmation dialog elements
+        this.confirmDialogOverlay = document.getElementById('confirmDialogOverlay');
+        this.confirmDialogMessage = document.getElementById('confirmDialogMessage');
+        this.confirmDialogCancel = document.getElementById('confirmDialogCancel');
+        this.confirmDialogConfirm = document.getElementById('confirmDialogConfirm');
         
         // Progress elements
         this.progressBar = document.getElementById('progressBar');
@@ -181,6 +188,15 @@ class MusicPlayer {
         this.repeatBtn.addEventListener('click', () => this.toggleRepeat());
         this.clearBtn.addEventListener('click', () => this.clearPlaylist());
         this.newPlaylistBtn.addEventListener('click', () => this.showPlaylistModal());
+        
+        // Confirmation dialog events
+        this.confirmDialogCancel.addEventListener('click', () => this.hideConfirmDialog());
+        this.confirmDialogConfirm.addEventListener('click', () => this.executeConfirmDialogCallback());
+        this.confirmDialogOverlay.addEventListener('click', (e) => {
+            if (e.target === this.confirmDialogOverlay) {
+                this.hideConfirmDialog();
+            }
+        });
         
         // Progress bar
         this.progressBar.addEventListener('click', (e) => this.seekTo(e));
@@ -887,6 +903,25 @@ class MusicPlayer {
 
     clearPlaylist() {
         const currentPlaylist = this.getCurrentPlaylist();
+        const playlistName = this.currentPlaylistId === 'current' ? 'Queue' : (this.customPlaylists.get(this.currentPlaylistId)?.name || 'Playlist');
+        const trackCount = currentPlaylist.length;
+        
+        if (trackCount === 0) {
+            this.showNotification('Playlist is already empty', 'fa-info-circle');
+            return;
+        }
+        
+        const confirmMessage = `Are you sure you want to clear the ${playlistName}?\n\nThis will remove ${trackCount} track${trackCount > 1 ? 's' : ''}. You can undo this action from the action logs.`;
+        
+        this.showConfirmDialog(confirmMessage, () => {
+            // User confirmed - proceed with clearing
+            this.performClearPlaylist();
+        });
+    }
+
+    performClearPlaylist() {
+        const currentPlaylist = this.getCurrentPlaylist();
+        const playlistName = this.currentPlaylistId === 'current' ? 'Queue' : (this.customPlaylists.get(this.currentPlaylistId)?.name || 'Playlist');
         
         // Revoke all object URLs
         currentPlaylist.forEach(track => {
@@ -909,6 +944,8 @@ class MusicPlayer {
                 count: removedSnapshot.length
             }, true);
         }
+        
+        this.showNotification(`Cleared ${playlistName}`, 'fa-trash');
     }
 
     async loadTrack(index) {
@@ -1588,6 +1625,19 @@ class MusicPlayer {
     }
 
     handleKeyboard(event) {
+        // Handle confirmation dialog keyboard shortcuts first
+        if (this.confirmDialogOverlay.classList.contains('show')) {
+            if (event.code === 'Escape') {
+                event.preventDefault();
+                this.hideConfirmDialog();
+                return;
+            } else if (event.code === 'Enter') {
+                event.preventDefault();
+                this.executeConfirmDialogCallback();
+                return;
+            }
+        }
+        
         // Prevent default behavior for space bar
         if (event.code === 'Space' && event.target.tagName !== 'INPUT') {
             event.preventDefault();
@@ -1930,6 +1980,29 @@ class MusicPlayer {
             .map(index => ({ index, track: currentPlaylist[index] }));
     }
 
+    showConfirmDialog(message, callback) {
+        this.confirmDialogMessage.textContent = message;
+        this.confirmDialogCallback = callback;
+        this.confirmDialogOverlay.classList.add('show');
+        
+        // Focus the cancel button for accessibility
+        setTimeout(() => {
+            this.confirmDialogCancel.focus();
+        }, 100);
+    }
+
+    hideConfirmDialog() {
+        this.confirmDialogOverlay.classList.remove('show');
+        this.confirmDialogCallback = null;
+    }
+
+    executeConfirmDialogCallback() {
+        if (this.confirmDialogCallback) {
+            this.confirmDialogCallback();
+        }
+        this.hideConfirmDialog();
+    }
+
 
     // Heuristic: treat as audio if MIME says audio/* or filename has a common audio extension
     isProbablyAudioFile(file) {
@@ -2004,4 +2077,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Version: v2.1.3
+// Version: v2.2.1
