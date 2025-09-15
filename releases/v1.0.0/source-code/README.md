@@ -11,7 +11,6 @@ A beautiful, modern music player with a sleek liquid glass design, dark theme, a
 - **Persistent Storage**: All playlists and settings are saved locally and restored on reload
 - **Theme System**: Switch between Dark, Light, Purple, and Blue themes
 - **Performance Mode**: Disable animations for better performance on low-end devices
-- **Discord Integration**: Join our community server for support and updates
 - **Advanced Controls**: Play, pause, skip, shuffle, repeat modes
 - **Smooth Volume Control**: Real-time volume adjustment with drag support
 - **Progress Bar**: Interactive progress bar with time display and seeking
@@ -43,7 +42,6 @@ Simply open `index.html` in your web browser.
 - **New Playlist**: Click "New Playlist" to create custom playlists with names and covers
 - **Playlist Tabs**: Click tabs to switch between playlists
 - **Settings**: Click the gear icon in bottom right to access theme and performance settings
-- **Discord**: Click the Discord icon to join our community server
 - **Remove**: Hover over playlist items and click the X
 
 ### Keyboard Shortcuts
@@ -59,7 +57,6 @@ Simply open `index.html` in your web browser.
 - **New Playlist**: Create custom playlists with names and album covers
 - **Playlist Tabs**: Switch between different playlists
 - **Settings**: Access theme switching and performance options
-- **Discord**: Join our community server for support and updates
 
 ## 🎨 Design Features
 
