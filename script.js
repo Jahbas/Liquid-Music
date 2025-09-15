@@ -462,8 +462,10 @@ class MusicPlayer {
             return;
         }
 
-        this.playlistEl.innerHTML = currentPlaylist.map((track, index) => `
-            <div class="playlist-item ${index === this.currentTrackIndex ? 'active' : ''} ${this.selectedTracks.has(index) ? 'selected' : ''}" 
+        this.playlistEl.innerHTML = currentPlaylist.map((track, index) => {
+            const isSelected = this.selectedTracks.has(index);
+            return `
+            <div class="playlist-item ${index === this.currentTrackIndex ? 'active' : ''} ${isSelected ? 'selected' : ''}" 
                  data-index="${index}">
                 <div class="playlist-item-info">
                     <div class="playlist-item-title">${track.name}</div>
@@ -474,7 +476,8 @@ class MusicPlayer {
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-        `).join('');
+        `;
+        }).join('');
 
         // Add click and drag events to playlist items
         this.playlistEl.querySelectorAll('.playlist-item').forEach((item, index) => {
@@ -1917,6 +1920,7 @@ class MusicPlayer {
 
     clearSelection() {
         this.selectedTracks.clear();
+        this.isMultiSelecting = false; // Reset multi-select mode
     }
 
     getSelectedTracks() {
@@ -1925,6 +1929,7 @@ class MusicPlayer {
             .filter(index => index >= 0 && index < currentPlaylist.length)
             .map(index => ({ index, track: currentPlaylist[index] }));
     }
+
 
     // Heuristic: treat as audio if MIME says audio/* or filename has a common audio extension
     isProbablyAudioFile(file) {
@@ -1999,4 +2004,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Version: v2.1.2
+// Version: v2.1.3

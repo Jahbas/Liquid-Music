@@ -3,7 +3,7 @@
 <div align="center">
 
 ![Liquid Glass Music Player](https://img.shields.io/badge/Status-Ready%20to%20Use-brightgreen)
-![Version](https://img.shields.io/badge/Version-2.1.2-blue)
+![Version](https://img.shields.io/badge/Version-2.1.3-blue)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 ![Browser Support](https://img.shields.io/badge/Browser%20Support-Modern%20Browsers-orange)
 
