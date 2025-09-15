@@ -307,7 +307,12 @@ class MusicPlayer {
         this.playlistEl.querySelectorAll('.playlist-item').forEach((item, index) => {
             item.addEventListener('click', (e) => {
                 if (!e.target.closest('.playlist-item-remove')) {
-                    this.loadTrack(index);
+                    const maybePromise = this.loadTrack(index);
+                    if (maybePromise && typeof maybePromise.then === 'function') {
+                        maybePromise.then(() => this.play());
+                    } else {
+                        this.play();
+                    }
                 }
             });
         });
