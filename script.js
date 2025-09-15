@@ -313,6 +313,7 @@ class MusicPlayer {
         // Global drag & drop for files/folders
         this.bindDragAndDrop();
 
+
         // Global paste (copy files from Explorer, paste into the page)
         document.addEventListener('paste', async (e) => {
             try {
@@ -2071,6 +2072,7 @@ class MusicPlayer {
         }
         this.hideConfirmDialog();
     }
+
 
 
     // Heuristic: treat as audio if MIME says audio/* or filename has a common audio extension
