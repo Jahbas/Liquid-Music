@@ -381,6 +381,37 @@ body.modal-open .player-overlay {
     font-weight: 400;
 }
 
+.mute-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 8px 16px;
+    background: rgba(255, 0, 0, 0.2);
+    border: 1px solid rgba(255, 0, 0, 0.4);
+    border-radius: 20px;
+    color: #ff6b6b;
+    font-size: 0.9rem;
+    font-weight: 500;
+    animation: mutePulse 2s ease-in-out infinite;
+}
+
+.mute-indicator i {
+    font-size: 1rem;
+}
+
+@keyframes mutePulse {
+    0%, 100% {
+        opacity: 0.8;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+}
+
 /* Progress Bar */
 .progress-container {
     display: flex;
@@ -2273,6 +2304,13 @@ body[data-theme="glass"] .playlist-item.selected {
     border: 5px solid rgba(120, 120, 255, 0.8) !important;
 }
 
+/* Glass theme mute indicator */
+body[data-theme="glass"] .mute-indicator {
+    background: rgba(255, 100, 100, 0.2) !important;
+    border: 1px solid rgba(255, 100, 100, 0.4) !important;
+    color: #ff8a8a !important;
+}
+
 body[data-theme="glass"] .playlist-item.selecting {
     background: rgba(80, 80, 255, 0.2) !important;
     border-color: rgba(100, 100, 255, 0.5) !important;
@@ -2538,6 +2576,13 @@ body[data-theme="dark"] .album-art-container:hover .album-art {
 body[data-theme="dark"] .cover-preview img {
     filter: brightness(0.7) contrast(1.1) saturate(0.8) !important;
     transition: filter 0.3s ease;
+}
+
+/* Dark theme mute indicator */
+body[data-theme="dark"] .mute-indicator {
+    background: rgba(255, 100, 100, 0.2) !important;
+    border: 1px solid rgba(255, 100, 100, 0.4) !important;
+    color: #ff8a8a !important;
 }
 
 body[data-theme="dark"] .cover-preview:hover img {
