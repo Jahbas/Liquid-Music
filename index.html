@@ -33,10 +33,6 @@
                     <i class="fas fa-folder-open"></i>
                     <span>Upload Folder</span>
                 </button>
-                <button class="upload-btn glass-card" id="marketToggle">
-                    <i class="fas fa-store"></i>
-                    <span>Market</span>
-                </button>
             </div>
         </header>
 
@@ -293,37 +289,6 @@
         </div>
     </div>
 
-    <!-- Market Modal -->
-    <div class="modal-overlay" id="marketModal">
-        <div class="modal glass-card">
-            <div class="modal-header">
-                <h3><i class="fas fa-store"></i> Market</h3>
-                <button class="modal-close" id="marketClose"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-content">
-                <div class="form-group" style="margin-bottom:16px;">
-                    <label for="marketSearch">Search</label>
-                    <input type="text" id="marketSearch" placeholder="Search packs or artists..." maxlength="80">
-                </div>
-                <div class="logs-toolbar" style="margin: 8px 0 16px;">
-                    <span class="logs-hint">Browse and add music packs here. Coming soon.</span>
-                </div>
-                <div id="marketList" class="logs-list" style="min-height:140px;">
-                    <div class="playlist-empty">
-                        <i class="fas fa-box-open"></i>
-                        <p>No market items yet</p>
-                        <p>Marketplace items will appear here in future updates</p>
-                    </div>
-                </div>
-                <div class="modal-actions">
-                    <button class="btn btn-secondary" id="marketCloseFooter">Close</button>
-                    <button class="btn btn-primary" id="marketAddSelected" disabled>
-                        <i class="fas fa-cart-plus"></i> Add Selected to Queue
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <script src="script.js"></script>
     <!-- Toast Container -->

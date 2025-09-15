@@ -278,25 +278,6 @@ class MusicPlayer {
         });
         this.logsClear.addEventListener('click', () => this.showClearLogsConfirm());
 
-        // Market events
-        this.marketToggle = document.getElementById('marketToggle');
-        this.marketModal = document.getElementById('marketModal');
-        this.marketClose = document.getElementById('marketClose');
-        this.marketCloseFooter = document.getElementById('marketCloseFooter');
-        this.marketSearch = document.getElementById('marketSearch');
-        this.marketList = document.getElementById('marketList');
-        this.marketAddSelected = document.getElementById('marketAddSelected');
-
-        if (this.marketToggle) this.marketToggle.addEventListener('click', () => this.showMarket());
-        if (this.marketClose) this.marketClose.addEventListener('click', () => this.hideMarket());
-        if (this.marketCloseFooter) this.marketCloseFooter.addEventListener('click', () => this.hideMarket());
-        if (this.marketModal) {
-            this.marketModal.addEventListener('click', (e) => {
-                if (e.target === this.marketModal) this.hideMarket();
-            });
-        }
-        if (this.marketSearch) this.marketSearch.addEventListener('input', () => this.filterMarket());
-        if (this.marketAddSelected) this.marketAddSelected.addEventListener('click', () => this.addSelectedFromMarket());
 
         // Discord confirmation
         if (this.discordBtn) {
@@ -1205,76 +1186,6 @@ class MusicPlayer {
         this.logsModal.classList.remove('active');
     }
 
-    // Market UI
-    showMarket() {
-        if (!this.marketModal) return;
-        this.renderMarket();
-        this.marketModal.classList.add('active');
-    }
-
-    hideMarket() {
-        if (!this.marketModal) return;
-        this.marketModal.classList.remove('active');
-    }
-
-    renderMarket() {
-        if (!this.marketList) return;
-        // Placeholder static items for now
-        const items = [
-            { id: 'pack_demo_1', name: 'Chillwave Starter Pack', count: 12 },
-            { id: 'pack_demo_2', name: 'Lo-Fi Beats Vol. 1', count: 18 },
-            { id: 'pack_demo_3', name: 'Synthwave Essentials', count: 15 }
-        ];
-        const query = (this.marketSearch?.value || '').toLowerCase().trim();
-        const filtered = query ? items.filter(i => i.name.toLowerCase().includes(query)) : items;
-        if (!filtered.length) {
-            this.marketList.innerHTML = `
-                <div class="playlist-empty">
-                    <i class="fas fa-search"></i>
-                    <p>No results</p>
-                    <p>Try a different search term</p>
-                </div>
-            `;
-            this.marketAddSelected.disabled = true;
-            return;
-        }
-        this.marketList.innerHTML = filtered.map(i => `
-            <label class="log-item" style="display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:10px; cursor:pointer;">
-                <input type="checkbox" class="market-select" value="${i.id}" style="margin:0;"/>
-                <div class="log-main">
-                    <div class="log-title">${i.name}</div>
-                    <div class="log-meta">${i.count} tracks</div>
-                </div>
-                <button class="btn btn-secondary" data-id="${i.id}">Details</button>
-            </label>
-        `).join('');
-        this.marketList.querySelectorAll('.market-select').forEach(cb => {
-            cb.addEventListener('change', () => this.updateMarketSelection());
-        });
-        this.updateMarketSelection();
-    }
-
-    filterMarket() {
-        this.renderMarket();
-    }
-
-    updateMarketSelection() {
-        const selected = this.getMarketSelectedIds();
-        if (this.marketAddSelected) this.marketAddSelected.disabled = selected.length === 0;
-    }
-
-    getMarketSelectedIds() {
-        if (!this.marketList) return [];
-        return Array.from(this.marketList.querySelectorAll('.market-select:checked')).map(cb => cb.value);
-    }
-
-    async addSelectedFromMarket() {
-        // Placeholder behavior: show a toast. Later we can fetch packs and add tracks.
-        const selected = this.getMarketSelectedIds();
-        if (!selected.length) return;
-        this.showNotification(`Queued ${selected.length} pack${selected.length>1?'s':''} (mock)`, 'fa-cart-plus');
-        this.hideMarket();
-    }
 
     showClearLogsConfirm() {
         this.confirmMessage.textContent = 'Are you sure you want to clear all action logs? This cannot be undone.';
