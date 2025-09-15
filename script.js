@@ -315,6 +315,33 @@ class MusicPlayer {
                     }
                 }
             });
+
+            // Enable drag only from Current Queue (copy into playlists)
+            if (this.currentPlaylistId === 'current') {
+                item.setAttribute('draggable', 'true');
+                item.addEventListener('dragstart', (e) => {
+                    try {
+                        e.dataTransfer.setData('text/plain', String(index));
+                        e.dataTransfer.effectAllowed = 'copy';
+                        // Custom liquid glass drag image
+                        const dragGhost = document.createElement('div');
+                        dragGhost.className = 'glass-card';
+                        dragGhost.style.cssText = `
+                            position: fixed; top: -9999px; left: -9999px; padding: 10px 14px; border-radius: 14px;
+                            background: rgba(255,255,255,0.12); backdrop-filter: blur(18px);
+                            border: 1px solid rgba(255,255,255,0.25); color: #fff; font: 500 12px 'Inter', sans-serif;
+                            box-shadow: 0 10px 28px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.15);
+                        `;
+                        dragGhost.textContent = currentPlaylist[index]?.name || 'Track';
+                        document.body.appendChild(dragGhost);
+                        e.dataTransfer.setDragImage(dragGhost, dragGhost.offsetWidth / 2, dragGhost.offsetHeight / 2);
+                        // Cleanup after a tick
+                        setTimeout(() => dragGhost.remove(), 0);
+                    } catch (_) {}
+                });
+            } else {
+                item.removeAttribute('draggable');
+            }
         });
     }
 
@@ -355,6 +382,63 @@ class MusicPlayer {
                     this.switchPlaylist(playlistId);
                 }
             });
+
+            // Double-click to play the playlist immediately
+            tab.addEventListener('dblclick', (e) => {
+                if (e.target.closest('.playlist-tab-remove')) return;
+                const playlistId = tab.dataset.playlist;
+                this.switchPlaylist(playlistId);
+                const list = this.getCurrentPlaylist();
+                if (list.length > 0) {
+                    this.play();
+                }
+            });
+
+            // Allow drop of tracks from Current Queue onto custom playlist tabs
+            const playlistId = tab.dataset.playlist;
+            if (playlistId !== 'current') {
+                tab.addEventListener('dragover', (e) => {
+                    // Only allow dragover if dragging from current queue
+                    e.preventDefault();
+                    tab.classList.add('drag-over');
+                });
+                tab.addEventListener('dragleave', () => {
+                    tab.classList.remove('drag-over');
+                });
+                tab.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    try {
+                        const indexStr = e.dataTransfer.getData('text/plain');
+                        const index = parseInt(indexStr, 10);
+                        if (Number.isNaN(index)) return;
+                        const sourceTrack = this.playlist[index];
+                        if (!sourceTrack) return;
+                        const playlist = this.customPlaylists.get(playlistId);
+                        if (!playlist) return;
+                        // Copy (not move) the track into the target playlist
+                        const copied = {
+                            id: sourceTrack.id,
+                            name: sourceTrack.name,
+                            duration: sourceTrack.duration || 0,
+                            url: sourceTrack.url || null
+                        };
+                        playlist.tracks.push(copied);
+                        this.saveToStorage();
+                        // If user is viewing the target playlist, refresh
+                        if (this.currentPlaylistId === playlistId) {
+                            this.renderPlaylist();
+                        }
+                        // Visual ripple feedback
+                        const ripple = document.createElement('span');
+                        ripple.className = 'drop-ripple';
+                        tab.appendChild(ripple);
+                        setTimeout(() => ripple.remove(), 650);
+                    } catch (_) {
+                        // no-op
+                    }
+                    tab.classList.remove('drag-over');
+                });
+            }
         });
     }
 

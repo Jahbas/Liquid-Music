@@ -516,6 +516,15 @@ body {
     color: #ffffff;
 }
 
+/* Liquid glass drag-over glow */
+.playlist-tab.drag-over {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(78, 205, 196, 0.5);
+    box-shadow: 0 10px 30px rgba(78, 205, 196, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
 .playlist-tab-cover {
     width: 20px;
     height: 20px;
@@ -547,6 +556,28 @@ body {
 .playlist-tab-remove:hover {
     background: rgba(255, 107, 107, 0.3);
     transform: scale(1.1);
+}
+
+/* Drop ripple for playlist tabs */
+.playlist-tab .drop-ripple {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(78,205,196,0.6));
+    opacity: 0.9;
+    pointer-events: none;
+    animation: drop-ripple-animation 600ms ease-out forwards;
+    filter: blur(0.2px);
+}
+
+@keyframes drop-ripple-animation {
+    0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.95; }
+    70% { transform: translate(-50%, -50%) scale(6); opacity: 0.35; }
+    100% { transform: translate(-50%, -50%) scale(8); opacity: 0; }
 }
 
 .playlist-header h3 {
