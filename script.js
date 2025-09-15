@@ -130,6 +130,7 @@ class MusicPlayer {
         this.trackTitle = document.getElementById('trackTitle');
         this.trackArtist = document.getElementById('trackArtist');
         this.albumArt = document.getElementById('albumArt');
+        this.muteIndicator = document.getElementById('muteIndicator');
         
         // Playlist elements
         this.playlistEl = document.getElementById('playlist');
@@ -1116,6 +1117,11 @@ class MusicPlayer {
         
         this.audio.volume = this.volume;
         this.updateVolumeDisplay();
+        
+        // Hide mute indicator if volume is set to non-zero
+        if (this.volume > 0) {
+            this.muteIndicator.style.display = 'none';
+        }
     }
 
     startVolumeDrag(event) {
@@ -1131,6 +1137,11 @@ class MusicPlayer {
             
             this.audio.volume = this.volume;
             this.updateVolumeDisplay();
+            
+            // Hide mute indicator if volume is set to non-zero
+            if (this.volume > 0) {
+                this.muteIndicator.style.display = 'none';
+            }
         } else if (this.isDraggingProgress) {
             const currentPlaylist = this.getCurrentPlaylist();
             if (currentPlaylist.length === 0) return;
@@ -1152,9 +1163,11 @@ class MusicPlayer {
         if (this.audio.volume > 0) {
             this.audio.volume = 0;
             this.volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+            this.muteIndicator.style.display = 'flex';
         } else {
             this.audio.volume = this.volume;
             this.updateVolumeButton();
+            this.muteIndicator.style.display = 'none';
         }
         this.updateVolumeDisplay();
     }
@@ -1174,6 +1187,11 @@ class MusicPlayer {
         this.volumeProgress.style.width = `${this.volume * 100}%`;
         this.volumeHandle.style.left = `${this.volume * 100}%`;
         this.updateVolumeButton();
+        
+        // Hide mute indicator if volume is not 0
+        if (this.audio.volume > 0) {
+            this.muteIndicator.style.display = 'none';
+        }
     }
 
     updateProgress() {
