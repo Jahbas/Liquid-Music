@@ -1394,6 +1394,29 @@ body.modal-open .player-overlay {
     box-shadow: 0 15px 35px rgba(100, 149, 237, 0.5);
 }
 
+.settings-toggle:hover i {
+    animation: settings-rotate 1.5s linear infinite !important;
+}
+
+.settings-toggle:active {
+    transform: translateY(-1px) scale(1.05) !important;
+}
+
+.settings-toggle:active i {
+    animation: settings-rotate 1.5s linear infinite !important;
+}
+
+@keyframes settings-rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes settings-click {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.9); }
+    100% { transform: scale(1); }
+}
+
 .discord-btn {
     width: 50px;
     height: 50px;
@@ -1626,6 +1649,18 @@ body.performance-mode .control-btn:hover,
 body.performance-mode .upload-btn:hover,
 body.performance-mode .settings-toggle:hover {
     transform: none !important;
+}
+
+body.performance-mode .settings-toggle:hover i {
+    animation: settings-rotate 1.5s linear infinite !important;
+}
+
+body.performance-mode .settings-toggle:active {
+    transform: translateY(-1px) scale(1.05) !important;
+}
+
+body.performance-mode .settings-toggle:active i {
+    animation: settings-rotate 1.5s linear infinite !important;
 }
 
 body.performance-mode .album-art-container:hover {
