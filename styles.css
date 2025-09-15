@@ -277,6 +277,28 @@ body.modal-open .player-overlay {
     opacity: 1;
 }
 
+/* Reduce motion/hover jitter while maximized */
+.player.maximized:hover::before {
+    opacity: 0.2;
+}
+
+.player.maximized .album-art-container:hover {
+    /* Keep the same scale as maximized base to avoid shrink/expand on hover */
+    transform: translateZ(0) scale(1.06);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+}
+
+@media (min-width: 1024px) {
+    .player.maximized .album-art-container:hover {
+        transform: translateZ(0) scale(1.08);
+    }
+}
+
+.player.maximized .control-btn:hover {
+    /* Dampen button hover to reduce dizziness when enlarged */
+    transform: translateY(-2px) scale(1.04);
+}
+
 /* Album Art */
 .album-art-container {
     position: relative;
