@@ -78,6 +78,9 @@ class MusicPlayer {
         this.stackModeActive = false; // user pressed Ctrl during drag to stack
         this.db = db;
 
+        // Action log storage
+        this.actionLog = [];
+
         this.initializeElements();
         this.bindEvents();
         this.setupAudio();
@@ -146,6 +149,19 @@ class MusicPlayer {
         this.themeLabel = document.getElementById('themeLabel');
         this.themeCollapseArrow = document.getElementById('themeCollapseArrow');
         this.themeSelector = document.getElementById('themeSelector');
+
+        // Logs UI elements
+        this.logsToggle = document.getElementById('logsToggle');
+        this.logsModal = document.getElementById('logsModal');
+        this.logsClose = document.getElementById('logsClose');
+        this.logsClear = document.getElementById('logsClear');
+        this.logsList = document.getElementById('logsList');
+        
+        // Confirmation modal elements
+        this.confirmModal = document.getElementById('confirmModal');
+        this.confirmMessage = document.getElementById('confirmMessage');
+        this.confirmCancel = document.getElementById('confirmCancel');
+        this.confirmOk = document.getElementById('confirmOk');
     }
 
     bindEvents() {
@@ -251,6 +267,21 @@ class MusicPlayer {
                 this.hideSettings();
             }
         });
+
+        // Logs events
+        this.logsToggle.addEventListener('click', () => this.showLogs());
+        this.logsClose.addEventListener('click', () => this.hideLogs());
+        this.logsModal.addEventListener('click', (e) => {
+            if (e.target === this.logsModal) this.hideLogs();
+        });
+        this.logsClear.addEventListener('click', () => this.showClearLogsConfirm());
+        
+        // Confirmation modal events
+        this.confirmCancel.addEventListener('click', () => this.hideConfirmModal());
+        this.confirmOk.addEventListener('click', () => this.handleConfirmOk());
+        this.confirmModal.addEventListener('click', (e) => {
+            if (e.target === this.confirmModal) this.hideConfirmModal();
+        });
     }
 
     setupAudio() {
@@ -300,6 +331,8 @@ class MusicPlayer {
         this.renderPlaylist();
         this.saveToStorage();
 
+        this.pushAction('track_add', { targetId: 'current', targetLabel: 'Queue', tracks: [{ id: track.id, name: track.name }], count: 1 }, true);
+
         if (this.playlist.length === 1) {
             this.loadTrack(0);
         }
@@ -341,10 +374,10 @@ class MusicPlayer {
                         // Multi-select mode
                         this.toggleTrackSelection(index);
                         this.isMultiSelecting = true;
+                        this.renderPlaylist(); // Re-render to show selection state
                     } else {
-                        // Single selection - clear others and play
+                        // Single selection - clear others and play (don't show selection state)
                         this.clearSelection();
-                        this.selectedTracks.add(index);
                         const maybePromise = this.loadTrack(index);
                         if (maybePromise && typeof maybePromise.then === 'function') {
                             maybePromise.then(() => this.play());
@@ -352,8 +385,8 @@ class MusicPlayer {
                             this.play();
                         }
                         this.isMultiSelecting = false;
+                        // Don't re-render here to avoid showing selection state for single clicks
                     }
-                    this.renderPlaylist(); // Re-render to show selection state
                 }
             });
 
@@ -585,6 +618,16 @@ class MusicPlayer {
         this.saveToStorage();
         const targetLabel = targetId === 'current' ? 'Queue' : (this.customPlaylists.get(targetId)?.name || 'Playlist');
         this.showNotification(`Moved 1 track to ${targetLabel}`, 'fa-arrow-right');
+        // Log move
+        this.pushAction('track_move', {
+            sourceId,
+            targetId,
+            sourceLabel: sourceId === 'current' ? 'Queue' : (this.customPlaylists.get(sourceId)?.name || 'Playlist'),
+            targetLabel,
+            indices: [sourceIndex],
+            count: 1,
+            tracks: track ? [{ id: track.id, name: track.name }] : []
+        }, true);
         // Re-render affected views
         this.renderPlaylistTabs();
         if (this.currentPlaylistId === sourceId || this.currentPlaylistId === targetId) {
@@ -655,6 +698,16 @@ class MusicPlayer {
         const count = tracksToMove.length;
         const targetLabel = targetId === 'current' ? 'Queue' : (this.customPlaylists.get(targetId)?.name || 'Playlist');
         this.showNotification(`Moved ${count} track${count>1?'s':''} to ${targetLabel}`, 'fa-layer-group');
+        // Log move multiple
+        this.pushAction('track_move', {
+            sourceId,
+            targetId,
+            sourceLabel: sourceId === 'current' ? 'Queue' : (this.customPlaylists.get(sourceId)?.name || 'Playlist'),
+            targetLabel,
+            indices: sourceIndices,
+            count,
+            tracks: tracksToMove.map(t => ({ id: t.id, name: t.name }))
+        }, true);
         // Re-render affected views
         this.renderPlaylistTabs();
         if (this.currentPlaylistId === sourceId || this.currentPlaylistId === targetId) {
@@ -688,6 +741,7 @@ class MusicPlayer {
     removeTrack(index) {
         const currentPlaylist = this.getCurrentPlaylist();
         if (currentPlaylist[index]) {
+            const removed = currentPlaylist[index];
             // Revoke the object URL to free memory
             URL.revokeObjectURL(currentPlaylist[index].url);
             
@@ -707,6 +761,14 @@ class MusicPlayer {
             
             this.renderPlaylist();
             this.saveToStorage();
+
+            // Log removal with context
+            this.pushAction('track_remove', { 
+                sourceId: this.currentPlaylistId,
+                sourceLabel: this.currentPlaylistId === 'current' ? 'Queue' : (this.customPlaylists.get(this.currentPlaylistId)?.name || 'Playlist'),
+                tracks: [{ id: removed.id, name: removed.name, index }],
+                count: 1
+            }, true);
         }
     }
 
@@ -718,12 +780,22 @@ class MusicPlayer {
             URL.revokeObjectURL(track.url);
         });
         
+        const removedSnapshot = currentPlaylist.map((t, i) => ({ id: t.id, name: t.name, index: i }));
         currentPlaylist.length = 0;
         this.currentTrackIndex = 0;
         this.stop();
         this.renderPlaylist();
         this.updateTrackInfo('No track selected', 'Upload music to get started');
         this.saveToStorage();
+
+        if (removedSnapshot.length) {
+            this.pushAction('track_remove', {
+                sourceId: this.currentPlaylistId,
+                sourceLabel: this.currentPlaylistId === 'current' ? 'Queue' : (this.customPlaylists.get(this.currentPlaylistId)?.name || 'Playlist'),
+                tracks: removedSnapshot,
+                count: removedSnapshot.length
+            }, true);
+        }
     }
 
     async loadTrack(index) {
@@ -994,6 +1066,229 @@ class MusicPlayer {
         } catch (_) {}
     }
 
+    // Action Log: UI
+    showLogs() {
+        this.renderLogs();
+        this.logsModal.classList.add('active');
+    }
+
+    hideLogs() {
+        this.logsModal.classList.remove('active');
+    }
+
+    showClearLogsConfirm() {
+        this.confirmMessage.textContent = 'Are you sure you want to clear all action logs? This cannot be undone.';
+        this.confirmModal.classList.add('active');
+        this.pendingAction = 'clearLogs';
+    }
+
+    clearLogs() {
+        this.actionLog = [];
+        this.saveActionLog();
+        this.renderLogs();
+        this.showNotification('Action logs cleared', 'fa-trash');
+    }
+
+    showConfirmModal(message, action) {
+        this.confirmMessage.textContent = message;
+        this.confirmModal.classList.add('active');
+        this.pendingAction = action;
+    }
+
+    hideConfirmModal() {
+        this.confirmModal.classList.remove('active');
+        this.pendingAction = null;
+    }
+
+    handleConfirmOk() {
+        if (this.pendingAction === 'clearLogs') {
+            this.clearLogs();
+        }
+        this.hideConfirmModal();
+    }
+
+    renderLogs() {
+        if (!this.logsList) return;
+        if (!this.actionLog || this.actionLog.length === 0) {
+            this.logsList.innerHTML = `
+                <div class="playlist-empty">
+                    <i class="fas fa-clipboard-list"></i>
+                    <p>No actions yet</p>
+                    <p>Actions like create, delete, and move will appear here</p>
+                </div>
+            `;
+            return;
+        }
+
+        this.logsList.innerHTML = this.actionLog
+            .slice()
+            .reverse()
+            .map(action => {
+                const ts = new Date(action.timestamp).toLocaleString();
+                const title = this.describeActionTitle(action);
+                const meta = this.describeActionMeta(action);
+                return `
+                    <div class="log-item">
+                        <div class="log-main">
+                            <div class="log-title">${title}</div>
+                            <div class="log-meta">${meta} • ${ts}</div>
+                        </div>
+                        <div class="log-actions">
+                            ${action.canUndo ? `<button class="undo-btn" data-id="${action.id}"><i class=\"fas fa-undo\"></i> Undo</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+        // Bind undo buttons
+        this.logsList.querySelectorAll('.undo-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                this.undoAction(id);
+            });
+        });
+    }
+
+    describeActionTitle(action) {
+        switch (action.type) {
+            case 'playlist_create': return `Created playlist “${action.data.name}”`;
+            case 'playlist_delete': return `Deleted playlist “${action.data.name}”`;
+            case 'track_add': return `Added ${action.data.count === 1 ? 'track' : action.data.count + ' tracks'} to ${action.data.targetLabel}`;
+            case 'track_remove': return `Removed ${action.data.count === 1 ? 'track' : action.data.count + ' tracks'}`;
+            case 'track_move': return `Moved ${action.data.count === 1 ? 'track' : action.data.count + ' tracks'} to ${action.data.targetLabel}`;
+            default: return action.type;
+        }
+    }
+
+    describeActionMeta(action) {
+        switch (action.type) {
+            case 'playlist_create':
+                return `Playlist ID: ${action.data.id}`;
+            case 'playlist_delete':
+                return `Playlist ID: ${action.data.id}`;
+            case 'track_add':
+                return `Into: ${action.data.targetId}`;
+            case 'track_remove':
+                return `From: ${action.data.sourceId}`;
+            case 'track_move':
+                return `From ${action.data.sourceId} → ${action.data.targetId}`;
+            default:
+                return '';
+        }
+    }
+
+    // Action Log: helpers
+    pushAction(type, data, canUndo = true) {
+        const entry = {
+            id: 'act_' + Date.now() + '_' + Math.random().toString(36).slice(2),
+            type,
+            data,
+            timestamp: Date.now(),
+            canUndo
+        };
+        this.actionLog.push(entry);
+        this.saveActionLog();
+        this.renderLogs();
+        return entry.id;
+    }
+
+    undoAction(actionId) {
+        const idx = this.actionLog.findIndex(a => a.id === actionId);
+        if (idx < 0) return;
+        const action = this.actionLog[idx];
+        switch (action.type) {
+            case 'playlist_create':
+                this.undoCreatePlaylist(action);
+                break;
+            case 'playlist_delete':
+                this.undoDeletePlaylist(action);
+                break;
+            case 'track_add':
+                this.undoTrackAdd(action);
+                break;
+            case 'track_remove':
+                this.undoTrackRemove(action);
+                break;
+            case 'track_move':
+                this.undoTrackMove(action);
+                break;
+            default:
+                return;
+        }
+        // Mark as not undoable after success
+        this.actionLog[idx].canUndo = false;
+        this.saveActionLog();
+        this.renderLogs();
+    }
+
+    undoCreatePlaylist(action) {
+        const id = action.data.id;
+        if (!this.customPlaylists.has(id)) return;
+        this.customPlaylists.delete(id);
+        if (this.currentPlaylistId === id) this.switchPlaylist('current');
+        this.renderPlaylistTabs();
+        this.saveToStorage();
+        this.showNotification(`Undid: created playlist “${action.data.name}”`, 'fa-undo');
+    }
+
+    undoDeletePlaylist(action) {
+        const { id, name, cover, tracks } = action.data;
+        if (this.customPlaylists.has(id)) return;
+        this.customPlaylists.set(id, { name, cover, tracks });
+        this.renderPlaylistTabs();
+        this.saveToStorage();
+        this.showNotification(`Undid: deleted playlist “${name}”`, 'fa-undo');
+    }
+
+    undoTrackAdd(action) {
+        const { targetId, tracks } = action.data;
+        const arr = this.getPlaylistArrayById(targetId);
+        if (!arr) return;
+        const ids = new Set(tracks.map(t => t.id));
+        for (let i = arr.length - 1; i >= 0; i--) {
+            if (ids.has(arr[i].id)) {
+                URL.revokeObjectURL(arr[i].url);
+                arr.splice(i, 1);
+            }
+        }
+        this.renderPlaylist();
+        this.saveToStorage();
+        this.showNotification(`Undid: add ${tracks.length > 1 ? tracks.length + ' tracks' : 'track'}`, 'fa-undo');
+    }
+
+    undoTrackRemove(action) {
+        const { sourceId, tracks } = action.data;
+        const arr = this.getPlaylistArrayById(sourceId);
+        if (!arr) return;
+        const sorted = [...tracks].sort((a,b) => a.index - b.index);
+        sorted.forEach(t => {
+            arr.splice(Math.min(t.index, arr.length), 0, { id: t.id, name: t.name, url: null, duration: 0 });
+        });
+        this.renderPlaylist();
+        this.saveToStorage();
+        this.showNotification(`Undid: remove ${tracks.length > 1 ? tracks.length + ' tracks' : 'track'}`, 'fa-undo');
+    }
+
+    undoTrackMove(action) {
+        const { sourceId, targetId } = action.data;
+        const sourceArr = this.getPlaylistArrayById(sourceId);
+        const targetArr = this.getPlaylistArrayById(targetId);
+        if (!sourceArr || !targetArr) return;
+        const ids = new Set((action.data.tracks || []).map(t => t.id));
+        if (ids.size === 0) return;
+        for (let i = targetArr.length - 1; i >= 0; i--) {
+            const tr = targetArr[i];
+            if (ids.has(tr.id)) {
+                const [track] = targetArr.splice(i, 1);
+                sourceArr.unshift(track);
+            }
+        }
+        this.renderPlaylistTabs();
+        this.renderPlaylist();
+        this.saveToStorage();
+        this.showNotification(`Undid: move tracks`, 'fa-undo');
+    }
+
     handleAudioError(error) {
         console.error('Audio error:', error);
     }
@@ -1071,6 +1366,8 @@ class MusicPlayer {
         this.renderPlaylistTabs();
         this.hidePlaylistModal();
         this.saveToStorage();
+
+        this.pushAction('playlist_create', { id: playlistId, name, cover }, true);
     }
 
     deletePlaylist(playlistId) {
@@ -1083,6 +1380,8 @@ class MusicPlayer {
                 });
             }
             
+            // Capture for undo
+            const snapshot = playlist ? { id: playlistId, name: playlist.name, cover: playlist.cover, tracks: [...playlist.tracks] } : null;
             this.customPlaylists.delete(playlistId);
             
             // Switch to current queue if we were viewing the deleted playlist
@@ -1092,6 +1391,8 @@ class MusicPlayer {
             
             this.renderPlaylistTabs();
             this.saveToStorage();
+
+            if (snapshot) this.pushAction('playlist_delete', snapshot, true);
         }
     }
 
@@ -1166,6 +1467,20 @@ class MusicPlayer {
             themeSectionCollapsed: this.themeSelector.classList.contains('collapsed')
         };
         localStorage.setItem('musicPlayerSettings', JSON.stringify(settings));
+    }
+
+    // Action Log: persistence
+    saveActionLog() {
+        try {
+            localStorage.setItem('musicPlayerActions', JSON.stringify(this.actionLog));
+        } catch (_) {}
+    }
+
+    loadActionLog() {
+        try {
+            const raw = localStorage.getItem('musicPlayerActions');
+            if (raw) this.actionLog = JSON.parse(raw);
+        } catch (_) { this.actionLog = []; }
     }
 
     loadSettings() {
@@ -1328,6 +1643,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('IndexedDB initialization failed:', e);
     }
     musicPlayer = new MusicPlayer(db);
+    musicPlayer.loadActionLog();
 });
 
 // Add some visual effects
