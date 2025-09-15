@@ -71,6 +71,11 @@ class MusicPlayer {
         this.volume = 0.7;
         this.isDraggingVolume = false;
         this.isDraggingProgress = false;
+        this.selectedTracks = new Set(); // Track indices of selected songs
+        this.isMultiSelecting = false;
+        this.isDragging = false; // whether a native drag is in progress
+        this.dragStartIndex = null; // index of the item where drag began
+        this.stackModeActive = false; // user pressed Ctrl during drag to stack
         this.db = db;
 
         this.initializeElements();
@@ -188,6 +193,31 @@ class MusicPlayer {
         
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => this.handleKeyboard(e));
+
+        // Stack mode: allow entering multi-select while dragging by holding Ctrl/Cmd
+        document.addEventListener('keydown', (e) => {
+            if ((e.key === 'Control' || e.metaKey) && this.isDragging) {
+                this.stackModeActive = true;
+                if (this.dragStartIndex != null) {
+                    this.selectedTracks.add(this.dragStartIndex);
+                    this.renderPlaylist();
+                }
+            }
+        });
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'Control' && !e.ctrlKey) {
+                this.stackModeActive = false;
+            }
+        });
+        
+        // Clear selection when clicking outside playlist items (not during drag)
+        document.addEventListener('click', (e) => {
+            if (this.isDragging) return;
+            if (!e.target.closest('.playlist-item') && !e.target.closest('.playlist-tab')) {
+                this.clearSelection();
+                this.renderPlaylist();
+            }
+        });
         
         // Modal overlay click to close
         this.playlistModal.addEventListener('click', (e) => {
@@ -290,7 +320,7 @@ class MusicPlayer {
         }
 
         this.playlistEl.innerHTML = currentPlaylist.map((track, index) => `
-            <div class="playlist-item ${index === this.currentTrackIndex ? 'active' : ''}" 
+            <div class="playlist-item ${index === this.currentTrackIndex ? 'active' : ''} ${this.selectedTracks.has(index) ? 'selected' : ''}" 
                  data-index="${index}">
                 <div class="playlist-item-info">
                     <div class="playlist-item-title">${track.name}</div>
@@ -307,12 +337,23 @@ class MusicPlayer {
         this.playlistEl.querySelectorAll('.playlist-item').forEach((item, index) => {
             item.addEventListener('click', (e) => {
                 if (!e.target.closest('.playlist-item-remove')) {
-                    const maybePromise = this.loadTrack(index);
-                    if (maybePromise && typeof maybePromise.then === 'function') {
-                        maybePromise.then(() => this.play());
+                    if (e.ctrlKey || e.metaKey || this.stackModeActive) {
+                        // Multi-select mode
+                        this.toggleTrackSelection(index);
+                        this.isMultiSelecting = true;
                     } else {
-                        this.play();
+                        // Single selection - clear others and play
+                        this.clearSelection();
+                        this.selectedTracks.add(index);
+                        const maybePromise = this.loadTrack(index);
+                        if (maybePromise && typeof maybePromise.then === 'function') {
+                            maybePromise.then(() => this.play());
+                        } else {
+                            this.play();
+                        }
+                        this.isMultiSelecting = false;
                     }
+                    this.renderPlaylist(); // Re-render to show selection state
                 }
             });
 
@@ -320,10 +361,37 @@ class MusicPlayer {
             item.setAttribute('draggable', 'true');
             item.addEventListener('dragstart', (e) => {
                 try {
-                    // Include source playlist id and index in payload
-                    const payload = { index, source: this.currentPlaylistId };
+                    this.isDragging = true;
+                    this.dragStartIndex = index;
+                    // If Ctrl is already held at drag start, activate stack mode and include this item
+                    if (e.ctrlKey || e.metaKey) {
+                        this.stackModeActive = true;
+                        this.selectedTracks.add(index);
+                    }
+                    // If this item is selected and we have multiple selections, drag all selected
+                    const selectedTracks = this.getSelectedTracks();
+                    const isDraggingMultiple = selectedTracks.length > 1 && this.selectedTracks.has(index);
+                    
+                    let payload;
+                    if (isDraggingMultiple) {
+                        // Drag all selected tracks
+                        payload = { 
+                            indices: selectedTracks.map(st => st.index), 
+                            source: this.currentPlaylistId,
+                            multiple: true
+                        };
+                    } else {
+                        // Drag single track
+                        payload = { 
+                            index, 
+                            source: this.currentPlaylistId,
+                            multiple: false
+                        };
+                    }
+                    
                     e.dataTransfer.setData('text/plain', JSON.stringify(payload));
                     e.dataTransfer.effectAllowed = 'move';
+                    
                     // Custom liquid glass drag image
                     const dragGhost = document.createElement('div');
                     dragGhost.className = 'glass-card';
@@ -333,12 +401,26 @@ class MusicPlayer {
                         border: 1px solid rgba(255,255,255,0.25); color: #fff; font: 500 12px 'Inter', sans-serif;
                         box-shadow: 0 10px 28px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.15);
                     `;
-                    dragGhost.textContent = currentPlaylist[index]?.name || 'Track';
+                    
+                    if (isDraggingMultiple) {
+                        dragGhost.textContent = `${selectedTracks.length} tracks`;
+                    } else {
+                        dragGhost.textContent = currentPlaylist[index]?.name || 'Track';
+                    }
+                    
                     document.body.appendChild(dragGhost);
                     e.dataTransfer.setDragImage(dragGhost, dragGhost.offsetWidth / 2, dragGhost.offsetHeight / 2);
                     // Cleanup after a tick
                     setTimeout(() => dragGhost.remove(), 0);
                 } catch (_) {}
+            });
+            item.addEventListener('dragend', () => {
+                // End of drag life-cycle
+                this.isDragging = false;
+                this.dragStartIndex = null;
+                // Do not clear selection here; drop handler or outside click will handle
+                // If user was stacking but didn't drop anywhere, keep the selection intact
+                this.stackModeActive = false;
             });
         });
     }
@@ -428,11 +510,23 @@ class MusicPlayer {
                 try {
                     const data = e.dataTransfer.getData('text/plain');
                     const payload = JSON.parse(data);
-                    if (!payload || typeof payload.index !== 'number' || !payload.source) return;
+                    if (!payload || !payload.source) return;
                     const sourceId = payload.source;
                     // Ignore dropping into the same playlist
                     if (sourceId === playlistId) return;
-                    this.moveTrackBetweenPlaylists(sourceId, payload.index, playlistId);
+                    
+                    if (payload.multiple && payload.indices) {
+                        // Move multiple tracks
+                        this.moveMultipleTracksBetweenPlaylists(sourceId, payload.indices, playlistId);
+                    } else if (typeof payload.index === 'number') {
+                        // Move single track
+                        this.moveTrackBetweenPlaylists(sourceId, payload.index, playlistId);
+                    }
+                    
+                    // Clear selection after successful move
+                    this.clearSelection();
+                    this.renderPlaylist();
+                    
                     // Visual ripple feedback
                     const ripple = document.createElement('span');
                     ripple.className = 'drop-ripple';
@@ -496,9 +590,77 @@ class MusicPlayer {
         }
     }
 
+    moveMultipleTracksBetweenPlaylists(sourceId, sourceIndices, targetId) {
+        const sourceArr = this.getPlaylistArrayById(sourceId);
+        const targetArr = this.getPlaylistArrayById(targetId) || (this.customPlaylists.get(targetId)?.tracks);
+        if (!sourceArr || !targetArr) return;
+
+        // Sort indices in descending order to avoid index shifting issues
+        const sortedIndices = [...sourceIndices].sort((a, b) => b - a);
+        const tracksToMove = [];
+
+        // Extract tracks in reverse order
+        for (const index of sortedIndices) {
+            if (index >= 0 && index < sourceArr.length) {
+                const [track] = sourceArr.splice(index, 1);
+                if (track) {
+                    tracksToMove.unshift(track); // Add to beginning to maintain original order
+                }
+            }
+        }
+
+        if (tracksToMove.length === 0) return;
+
+        // Insert tracks at front when moving into Current Queue, otherwise append
+        if (targetId === 'current') {
+            targetArr.unshift(...tracksToMove);
+        } else {
+            targetArr.push(...tracksToMove);
+        }
+
+        // Adjust current track index and playback if we moved from the currently viewed playlist
+        if (this.currentPlaylistId === sourceId) {
+            const movedIndices = new Set(sourceIndices);
+            let adjustmentCount = 0;
+            
+            for (const index of sourceIndices) {
+                if (index < this.currentTrackIndex) {
+                    adjustmentCount++;
+                } else if (index === this.currentTrackIndex) {
+                    // Current track was moved
+                    const list = this.getCurrentPlaylist();
+                    if (list.length === 0) {
+                        this.stop();
+                    } else {
+                        this.currentTrackIndex = Math.min(this.currentTrackIndex, list.length - 1);
+                        this.loadTrack(this.currentTrackIndex);
+                        if (this.isPlaying) this.play();
+                    }
+                    break;
+                }
+            }
+            
+            this.currentTrackIndex -= adjustmentCount;
+        }
+
+        // If we inserted at the front of the currently viewed playlist,
+        // shift currentTrackIndex to keep the same song highlighted/playing
+        if (this.currentPlaylistId === targetId && targetId === 'current') {
+            this.currentTrackIndex += tracksToMove.length;
+        }
+
+        this.saveToStorage();
+        // Re-render affected views
+        this.renderPlaylistTabs();
+        if (this.currentPlaylistId === sourceId || this.currentPlaylistId === targetId) {
+            this.renderPlaylist();
+        }
+    }
+
     switchPlaylist(playlistId) {
         this.currentPlaylistId = playlistId;
         this.currentTrackIndex = 0;
+        this.clearSelection(); // Clear selection when switching playlists
         this.renderPlaylistTabs();
         this.renderPlaylist();
         
@@ -823,6 +985,10 @@ class MusicPlayer {
         } else if (event.code === 'KeyM') {
             event.preventDefault();
             this.toggleMute();
+        } else if (event.code === 'Escape') {
+            // Clear selection on Escape
+            this.clearSelection();
+            this.renderPlaylist();
         }
     }
 
@@ -1103,6 +1269,25 @@ class MusicPlayer {
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = Math.floor(seconds % 60);
         return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    }
+
+    toggleTrackSelection(index) {
+        if (this.selectedTracks.has(index)) {
+            this.selectedTracks.delete(index);
+        } else {
+            this.selectedTracks.add(index);
+        }
+    }
+
+    clearSelection() {
+        this.selectedTracks.clear();
+    }
+
+    getSelectedTracks() {
+        const currentPlaylist = this.getCurrentPlaylist();
+        return Array.from(this.selectedTracks)
+            .filter(index => index >= 0 && index < currentPlaylist.length)
+            .map(index => ({ index, track: currentPlaylist[index] }));
     }
 }
 

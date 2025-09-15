@@ -672,6 +672,17 @@ body {
     border-color: rgba(255, 107, 107, 0.3);
 }
 
+.playlist-item.selected {
+    background: linear-gradient(45deg, rgba(100, 149, 237, 0.2), rgba(100, 149, 237, 0.1));
+    border-color: rgba(100, 149, 237, 0.4);
+    box-shadow: 0 0 0 2px rgba(100, 149, 237, 0.3);
+}
+
+.playlist-item.selected:hover {
+    background: linear-gradient(45deg, rgba(100, 149, 237, 0.25), rgba(100, 149, 237, 0.15));
+    border-color: rgba(100, 149, 237, 0.5);
+}
+
 .playlist-item-info {
     flex: 1;
     text-align: left;
