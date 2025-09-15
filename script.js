@@ -1,5 +1,65 @@
-class MusicPlayer {
+// Simple IndexedDB wrapper for storing audio blobs persistently
+class MusicDB {
     constructor() {
+        this.db = null;
+    }
+
+    open() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open('musicPlayerDB', 1);
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains('tracks')) {
+                    db.createObjectStore('tracks', { keyPath: 'id' });
+                }
+            };
+            request.onsuccess = () => {
+                this.db = request.result;
+                resolve();
+            };
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    saveFile(file) {
+        return new Promise((resolve, reject) => {
+            const id = 'track_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+            const tx = this.db.transaction('tracks', 'readwrite');
+            const store = tx.objectStore('tracks');
+            store.put({ id, blob: file });
+            tx.oncomplete = () => resolve(id);
+            tx.onerror = () => reject(tx.error);
+        });
+    }
+
+    getFile(id) {
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction('tracks', 'readonly');
+            const store = tx.objectStore('tracks');
+            const req = store.get(id);
+            req.onsuccess = () => resolve(req.result?.blob || null);
+            req.onerror = () => reject(req.error);
+        });
+    }
+
+    async getObjectUrl(id) {
+        const blob = await this.getFile(id);
+        return blob ? URL.createObjectURL(blob) : null;
+    }
+
+    deleteFile(id) {
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction('tracks', 'readwrite');
+            const store = tx.objectStore('tracks');
+            store.delete(id);
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+        });
+    }
+}
+
+class MusicPlayer {
+    constructor(db) {
         this.audio = new Audio();
         this.playlist = [];
         this.customPlaylists = new Map();
@@ -11,7 +71,8 @@ class MusicPlayer {
         this.volume = 0.7;
         this.isDraggingVolume = false;
         this.isDraggingProgress = false;
-        
+        this.db = db;
+
         this.initializeElements();
         this.bindEvents();
         this.setupAudio();
@@ -167,48 +228,48 @@ class MusicPlayer {
         this.audio.preload = 'metadata';
     }
 
-    handleFileUpload(event) {
+    async handleFileUpload(event) {
         const files = Array.from(event.target.files);
-        files.forEach(file => {
+        for (const file of files) {
             if (file.type.startsWith('audio/')) {
-                this.addTrackToPlaylist(file);
+                await this.addTrackToPlaylist(file);
             }
-        });
+        }
         
         // Clear the input so the same file can be selected again
         event.target.value = '';
     }
 
-    handleFolderUpload(event) {
+    async handleFolderUpload(event) {
         const files = Array.from(event.target.files);
         const audioFiles = files.filter(file => file.type.startsWith('audio/'));
         
         if (audioFiles.length === 0) {
-            alert('No audio files found in the selected folder.');
+            // Silently return if no audio files are present
             return;
         }
         
-        audioFiles.forEach(file => {
-            this.addTrackToPlaylist(file);
-        });
+        for (const file of audioFiles) {
+            await this.addTrackToPlaylist(file);
+        }
         
         // Clear the input
         event.target.value = '';
     }
 
-    addTrackToPlaylist(file) {
+    async addTrackToPlaylist(file) {
+        const id = await this.db.saveFile(file);
         const track = {
-            file: file,
-            name: file.name.replace(/\.[^/.]+$/, ""), // Remove extension
-            url: URL.createObjectURL(file),
+            id: id,
+            name: file.name.replace(/\.[^/.]+$/, ""),
+            url: URL.createObjectURL(file), // immediate playback without waiting for IDB
             duration: 0
         };
-        
+
         this.playlist.push(track);
         this.renderPlaylist();
         this.saveToStorage();
-        
-        // If this is the first track, load it
+
         if (this.playlist.length === 1) {
             this.loadTrack(0);
         }
@@ -355,14 +416,21 @@ class MusicPlayer {
         this.saveToStorage();
     }
 
-    loadTrack(index) {
+    async loadTrack(index) {
         const currentPlaylist = this.getCurrentPlaylist();
         if (index < 0 || index >= currentPlaylist.length) return;
         
         this.currentTrackIndex = index;
         const track = currentPlaylist[index];
-        
-        this.audio.src = track.url;
+
+        if (!track.url && track.id) {
+            // Reconstruct object URL from IndexedDB on demand
+            track.url = await this.db.getObjectUrl(track.id);
+        }
+
+        if (track.url) {
+            this.audio.src = track.url;
+        }
         this.updateTrackInfo(track.name, 'Unknown Artist');
         this.renderPlaylist();
         
@@ -585,6 +653,7 @@ class MusicPlayer {
             track.duration = this.audio.duration;
             this.durationEl.textContent = this.formatTime(this.audio.duration);
             this.renderPlaylist(); // Update duration in playlist
+            this.saveToStorage();
         }
     }
 
@@ -818,27 +887,48 @@ class MusicPlayer {
 
     // Storage Management
     saveToStorage() {
+        // Persist only serializable metadata (exclude object URLs and File/Blob)
+        const sanitizeTracks = (tracks) => tracks.map(t => ({ id: t.id, name: t.name, duration: t.duration || 0 }));
         const data = {
-            playlist: this.playlist,
-            customPlaylists: Array.from(this.customPlaylists.entries()),
+            playlist: sanitizeTracks(this.playlist),
+            customPlaylists: Array.from(this.customPlaylists.entries()).map(([id, pl]) => [id, {
+                name: pl.name,
+                cover: pl.cover,
+                tracks: sanitizeTracks(pl.tracks || [])
+            }]),
             currentPlaylistId: this.currentPlaylistId,
             volume: this.volume
         };
         localStorage.setItem('musicPlayer', JSON.stringify(data));
     }
 
-    loadFromStorage() {
+    async loadFromStorage() {
         try {
             const data = localStorage.getItem('musicPlayer');
             if (data) {
                 const parsed = JSON.parse(data);
                 
                 if (parsed.playlist) {
-                    this.playlist = parsed.playlist;
+                    // Rehydrate playlist and reconstruct URLs asynchronously
+                    this.playlist = parsed.playlist.map(t => ({ id: t.id, name: t.name, duration: t.duration || 0, url: null }));
+                    // Preload object URLs in background
+                    Promise.all(this.playlist.map(async (t) => {
+                        if (t.id) {
+                            t.url = await this.db.getObjectUrl(t.id);
+                        }
+                    })).then(() => {
+                        this.renderPlaylist();
+                    }).catch(() => {});
                 }
                 
                 if (parsed.customPlaylists) {
-                    this.customPlaylists = new Map(parsed.customPlaylists);
+                    // Rehydrate custom playlists
+                    const rebuilt = new Map();
+                    parsed.customPlaylists.forEach(([id, pl]) => {
+                        const tracks = (pl.tracks || []).map(t => ({ id: t.id, name: t.name, duration: t.duration || 0, url: null }));
+                        rebuilt.set(id, { name: pl.name, cover: pl.cover, tracks });
+                    });
+                    this.customPlaylists = rebuilt;
                 }
                 
                 if (parsed.currentPlaylistId) {
@@ -853,6 +943,11 @@ class MusicPlayer {
                 
                 this.renderPlaylistTabs();
                 this.renderPlaylist();
+                // If there is a track, attempt to load first one (URL may be set once rehydrated)
+                const list = this.getCurrentPlaylist();
+                if (list.length > 0) {
+                    this.loadTrack(0);
+                }
             }
         } catch (error) {
             console.error('Error loading from storage:', error);
@@ -870,8 +965,14 @@ class MusicPlayer {
 
 // Initialize the music player when the page loads
 let musicPlayer;
-document.addEventListener('DOMContentLoaded', () => {
-    musicPlayer = new MusicPlayer();
+document.addEventListener('DOMContentLoaded', async () => {
+    const db = new MusicDB();
+    try {
+        await db.open();
+    } catch (e) {
+        console.error('IndexedDB initialization failed:', e);
+    }
+    musicPlayer = new MusicPlayer(db);
 });
 
 // Add some visual effects
