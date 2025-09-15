@@ -1171,6 +1171,8 @@ body.modal-open .player-overlay {
     box-shadow: 0 15px 35px rgba(100, 149, 237, 0.5);
 }
 
+/* Market Button (now inline with upload buttons) */
+
 /* Logs modal list */
 .logs-toolbar {
     display: flex;
