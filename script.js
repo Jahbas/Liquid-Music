@@ -303,7 +303,7 @@ class MusicPlayer {
             </div>
         `).join('');
 
-        // Add click events to playlist items
+        // Add click and drag events to playlist items
         this.playlistEl.querySelectorAll('.playlist-item').forEach((item, index) => {
             item.addEventListener('click', (e) => {
                 if (!e.target.closest('.playlist-item-remove')) {
@@ -316,32 +316,30 @@ class MusicPlayer {
                 }
             });
 
-            // Enable drag only from Current Queue (copy into playlists)
-            if (this.currentPlaylistId === 'current') {
-                item.setAttribute('draggable', 'true');
-                item.addEventListener('dragstart', (e) => {
-                    try {
-                        e.dataTransfer.setData('text/plain', String(index));
-                        e.dataTransfer.effectAllowed = 'copy';
-                        // Custom liquid glass drag image
-                        const dragGhost = document.createElement('div');
-                        dragGhost.className = 'glass-card';
-                        dragGhost.style.cssText = `
-                            position: fixed; top: -9999px; left: -9999px; padding: 10px 14px; border-radius: 14px;
-                            background: rgba(255,255,255,0.12); backdrop-filter: blur(18px);
-                            border: 1px solid rgba(255,255,255,0.25); color: #fff; font: 500 12px 'Inter', sans-serif;
-                            box-shadow: 0 10px 28px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.15);
-                        `;
-                        dragGhost.textContent = currentPlaylist[index]?.name || 'Track';
-                        document.body.appendChild(dragGhost);
-                        e.dataTransfer.setDragImage(dragGhost, dragGhost.offsetWidth / 2, dragGhost.offsetHeight / 2);
-                        // Cleanup after a tick
-                        setTimeout(() => dragGhost.remove(), 0);
-                    } catch (_) {}
-                });
-            } else {
-                item.removeAttribute('draggable');
-            }
+            // Enable drag from any playlist (move into target playlist/tab)
+            item.setAttribute('draggable', 'true');
+            item.addEventListener('dragstart', (e) => {
+                try {
+                    // Include source playlist id and index in payload
+                    const payload = { index, source: this.currentPlaylistId };
+                    e.dataTransfer.setData('text/plain', JSON.stringify(payload));
+                    e.dataTransfer.effectAllowed = 'move';
+                    // Custom liquid glass drag image
+                    const dragGhost = document.createElement('div');
+                    dragGhost.className = 'glass-card';
+                    dragGhost.style.cssText = `
+                        position: fixed; top: -9999px; left: -9999px; padding: 10px 14px; border-radius: 14px;
+                        background: rgba(255,255,255,0.12); backdrop-filter: blur(18px);
+                        border: 1px solid rgba(255,255,255,0.25); color: #fff; font: 500 12px 'Inter', sans-serif;
+                        box-shadow: 0 10px 28px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.15);
+                    `;
+                    dragGhost.textContent = currentPlaylist[index]?.name || 'Track';
+                    document.body.appendChild(dragGhost);
+                    e.dataTransfer.setDragImage(dragGhost, dragGhost.offsetWidth / 2, dragGhost.offsetHeight / 2);
+                    // Cleanup after a tick
+                    setTimeout(() => dragGhost.remove(), 0);
+                } catch (_) {}
+            });
         });
     }
 
@@ -390,56 +388,101 @@ class MusicPlayer {
                 this.switchPlaylist(playlistId);
                 const list = this.getCurrentPlaylist();
                 if (list.length > 0) {
-                    this.play();
+                    const maybe = this.loadTrack(0);
+                    const tryImmediatePlay = () => {
+                        // Try to play right away
+                        const p = this.audio.play();
+                        if (p && typeof p.then === 'function') {
+                            p.catch(() => {
+                                // If it couldn't start immediately, retry on canplay once
+                                const onCanPlay = () => {
+                                    this.audio.removeEventListener('canplay', onCanPlay);
+                                    this.audio.play().catch(() => {});
+                                };
+                                this.audio.addEventListener('canplay', onCanPlay);
+                            });
+                        }
+                        this.isPlaying = true;
+                        this.updatePlayButton();
+                        this.albumArt.classList.add('loading');
+                    };
+                    if (maybe && typeof maybe.then === 'function') {
+                        maybe.then(tryImmediatePlay);
+                    } else {
+                        tryImmediatePlay();
+                    }
                 }
             });
 
-            // Allow drop of tracks from Current Queue onto custom playlist tabs
+            // Allow drop of tracks from any playlist onto any tab (move semantics)
             const playlistId = tab.dataset.playlist;
-            if (playlistId !== 'current') {
-                tab.addEventListener('dragover', (e) => {
-                    // Only allow dragover if dragging from current queue
-                    e.preventDefault();
-                    tab.classList.add('drag-over');
-                });
-                tab.addEventListener('dragleave', () => {
-                    tab.classList.remove('drag-over');
-                });
-                tab.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    try {
-                        const indexStr = e.dataTransfer.getData('text/plain');
-                        const index = parseInt(indexStr, 10);
-                        if (Number.isNaN(index)) return;
-                        const sourceTrack = this.playlist[index];
-                        if (!sourceTrack) return;
-                        const playlist = this.customPlaylists.get(playlistId);
-                        if (!playlist) return;
-                        // Copy (not move) the track into the target playlist
-                        const copied = {
-                            id: sourceTrack.id,
-                            name: sourceTrack.name,
-                            duration: sourceTrack.duration || 0,
-                            url: sourceTrack.url || null
-                        };
-                        playlist.tracks.push(copied);
-                        this.saveToStorage();
-                        // If user is viewing the target playlist, refresh
-                        if (this.currentPlaylistId === playlistId) {
-                            this.renderPlaylist();
-                        }
-                        // Visual ripple feedback
-                        const ripple = document.createElement('span');
-                        ripple.className = 'drop-ripple';
-                        tab.appendChild(ripple);
-                        setTimeout(() => ripple.remove(), 650);
-                    } catch (_) {
-                        // no-op
-                    }
-                    tab.classList.remove('drag-over');
-                });
-            }
+            tab.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                tab.classList.add('drag-over');
+            });
+            tab.addEventListener('dragleave', () => {
+                tab.classList.remove('drag-over');
+            });
+            tab.addEventListener('drop', (e) => {
+                e.preventDefault();
+                try {
+                    const data = e.dataTransfer.getData('text/plain');
+                    const payload = JSON.parse(data);
+                    if (!payload || typeof payload.index !== 'number' || !payload.source) return;
+                    const sourceId = payload.source;
+                    // Ignore dropping into the same playlist
+                    if (sourceId === playlistId) return;
+                    this.moveTrackBetweenPlaylists(sourceId, payload.index, playlistId);
+                    // Visual ripple feedback
+                    const ripple = document.createElement('span');
+                    ripple.className = 'drop-ripple';
+                    tab.appendChild(ripple);
+                    setTimeout(() => ripple.remove(), 650);
+                } catch (_) {
+                    // no-op
+                }
+                tab.classList.remove('drag-over');
+            });
         });
+    }
+
+    getPlaylistArrayById(playlistId) {
+        if (playlistId === 'current') return this.playlist;
+        return this.customPlaylists.get(playlistId)?.tracks || null;
+    }
+
+    moveTrackBetweenPlaylists(sourceId, sourceIndex, targetId) {
+        const sourceArr = this.getPlaylistArrayById(sourceId);
+        const targetArr = this.getPlaylistArrayById(targetId) || (this.customPlaylists.get(targetId)?.tracks);
+        if (!sourceArr || !targetArr) return;
+        if (sourceIndex < 0 || sourceIndex >= sourceArr.length) return;
+
+        const [track] = sourceArr.splice(sourceIndex, 1);
+        if (!track) return;
+        targetArr.push(track);
+
+        // Adjust current track index and playback if we moved from the currently viewed playlist
+        if (this.currentPlaylistId === sourceId) {
+            if (sourceIndex < this.currentTrackIndex) {
+                this.currentTrackIndex--;
+            } else if (sourceIndex === this.currentTrackIndex) {
+                const list = this.getCurrentPlaylist();
+                if (list.length === 0) {
+                    this.stop();
+                } else {
+                    this.currentTrackIndex = Math.min(this.currentTrackIndex, list.length - 1);
+                    this.loadTrack(this.currentTrackIndex);
+                    if (this.isPlaying) this.play();
+                }
+            }
+        }
+
+        this.saveToStorage();
+        // Re-render affected views
+        this.renderPlaylistTabs();
+        if (this.currentPlaylistId === sourceId || this.currentPlaylistId === targetId) {
+            this.renderPlaylist();
+        }
     }
 
     switchPlaylist(playlistId) {
