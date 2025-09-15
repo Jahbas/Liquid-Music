@@ -1129,15 +1129,58 @@ body {
     margin-bottom: 15px;
 }
 
-.setting-label i {
-    font-size: 16px;
-    opacity: 0.8;
+.theme-label {
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.3s ease;
+}
+
+.theme-label:hover {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.collapse-arrow {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-left: auto;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.collapse-arrow:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.collapse-arrow.rotated {
+    transform: rotate(180deg);
 }
 
 .theme-selector {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: 10px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.theme-selector.collapsed {
+    max-height: 0;
+    opacity: 0;
+    margin-bottom: 0;
+    padding: 0;
+}
+
+.setting-label i {
+    font-size: 16px;
+    opacity: 0.8;
 }
 
 .theme-btn {
@@ -1189,6 +1232,30 @@ body {
 
 .blue-theme {
     background: linear-gradient(135deg, #0f4c75, #3282b8, #bbe1fa);
+}
+
+.green-theme {
+    background: linear-gradient(135deg, #134e5e, #71b280, #a8e6cf);
+}
+
+.orange-theme {
+    background: linear-gradient(135deg, #ff7e5f, #feb47b, #ffecd2);
+}
+
+.pink-theme {
+    background: linear-gradient(135deg, #ff9a9e, #fecfef, #fecfef);
+}
+
+.red-theme {
+    background: linear-gradient(135deg, #c31432, #240b36, #ff6b6b);
+}
+
+.teal-theme {
+    background: linear-gradient(135deg, #134e5e, #71b280, #a8e6cf);
+}
+
+.indigo-theme {
+    background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
 }
 
 .setting-option {
@@ -1338,6 +1405,162 @@ body.blue-theme .orb-3 {
     background: linear-gradient(45deg, #667eea, #764ba2);
 }
 
+/* Green Theme */
+body.green-theme {
+    background: linear-gradient(135deg, #134e5e 0%, #71b280 50%, #a8e6cf 100%);
+}
+
+body.green-theme .orb-1 {
+    background: linear-gradient(45deg, #56ab2f, #a8e6cf);
+}
+
+body.green-theme .orb-2 {
+    background: linear-gradient(45deg, #134e5e, #71b280);
+}
+
+body.green-theme .orb-3 {
+    background: linear-gradient(45deg, #56ab2f, #a8e6cf);
+}
+
+/* Orange Theme */
+body.orange-theme {
+    background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 50%, #ffecd2 100%);
+    color: #2c3e50;
+}
+
+body.orange-theme .glass-card {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: #2c3e50;
+}
+
+body.orange-theme .glass-card:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+body.orange-theme .track-title,
+body.orange-theme .track-artist,
+body.orange-theme .setting-name,
+body.orange-theme .setting-label,
+body.orange-theme .settings-header h3,
+body.orange-theme .modal-header h3 {
+    color: #2c3e50;
+}
+
+body.orange-theme .track-artist,
+body.orange-theme .setting-desc,
+body.orange-theme .time {
+    color: rgba(44, 62, 80, 0.7);
+}
+
+body.orange-theme .orb-1 {
+    background: linear-gradient(45deg, #ff7e5f, #feb47b);
+}
+
+body.orange-theme .orb-2 {
+    background: linear-gradient(45deg, #feb47b, #ffecd2);
+}
+
+body.orange-theme .orb-3 {
+    background: linear-gradient(45deg, #ff7e5f, #feb47b);
+}
+
+/* Pink Theme */
+body.pink-theme {
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+    color: #2c3e50;
+}
+
+body.pink-theme .glass-card {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: #2c3e50;
+}
+
+body.pink-theme .glass-card:hover {
+    background: rgba(255, 255, 255, 0.4);
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+body.pink-theme .track-title,
+body.pink-theme .track-artist,
+body.pink-theme .setting-name,
+body.pink-theme .setting-label,
+body.pink-theme .settings-header h3,
+body.pink-theme .modal-header h3 {
+    color: #2c3e50;
+}
+
+body.pink-theme .track-artist,
+body.pink-theme .setting-desc,
+body.pink-theme .time {
+    color: rgba(44, 62, 80, 0.7);
+}
+
+body.pink-theme .orb-1 {
+    background: linear-gradient(45deg, #ff9a9e, #fecfef);
+}
+
+body.pink-theme .orb-2 {
+    background: linear-gradient(45deg, #fecfef, #ff9a9e);
+}
+
+body.pink-theme .orb-3 {
+    background: linear-gradient(45deg, #ff9a9e, #fecfef);
+}
+
+/* Red Theme */
+body.red-theme {
+    background: linear-gradient(135deg, #c31432 0%, #240b36 50%, #ff6b6b 100%);
+}
+
+body.red-theme .orb-1 {
+    background: linear-gradient(45deg, #c31432, #ff6b6b);
+}
+
+body.red-theme .orb-2 {
+    background: linear-gradient(45deg, #240b36, #c31432);
+}
+
+body.red-theme .orb-3 {
+    background: linear-gradient(45deg, #ff6b6b, #c31432);
+}
+
+/* Teal Theme */
+body.teal-theme {
+    background: linear-gradient(135deg, #134e5e 0%, #71b280 50%, #a8e6cf 100%);
+}
+
+body.teal-theme .orb-1 {
+    background: linear-gradient(45deg, #134e5e, #71b280);
+}
+
+body.teal-theme .orb-2 {
+    background: linear-gradient(45deg, #71b280, #a8e6cf);
+}
+
+body.teal-theme .orb-3 {
+    background: linear-gradient(45deg, #134e5e, #71b280);
+}
+
+/* Indigo Theme */
+body.indigo-theme {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+}
+
+body.indigo-theme .orb-1 {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+}
+
+body.indigo-theme .orb-2 {
+    background: linear-gradient(45deg, #764ba2, #f093fb);
+}
+
+body.indigo-theme .orb-3 {
+    background: linear-gradient(45deg, #f093fb, #667eea);
+}
+
 /* Performance Mode */
 body.performance-mode * {
     animation-duration: 0.01ms !important;
@@ -1401,6 +1624,6 @@ body.no-bg .gradient-orb {
     }
     
     .theme-selector {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
 }

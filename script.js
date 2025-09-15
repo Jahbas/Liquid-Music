@@ -77,6 +77,9 @@ class MusicPlayer {
         this.glassEffects = document.getElementById('glassEffects');
         this.animatedBg = document.getElementById('animatedBg');
         this.themeButtons = document.querySelectorAll('.theme-btn');
+        this.themeLabel = document.getElementById('themeLabel');
+        this.themeCollapseArrow = document.getElementById('themeCollapseArrow');
+        this.themeSelector = document.getElementById('themeSelector');
     }
 
     bindEvents() {
@@ -143,6 +146,9 @@ class MusicPlayer {
         this.themeButtons.forEach(btn => {
             btn.addEventListener('click', () => this.changeTheme(btn.dataset.theme));
         });
+        
+        // Theme collapse functionality
+        this.themeLabel.addEventListener('click', () => this.toggleThemeSection());
         
         // Settings panel overlay click to close
         this.settingsContent.addEventListener('click', (e) => {
@@ -693,9 +699,15 @@ class MusicPlayer {
         this.settingsContent.classList.remove('active');
     }
 
+    toggleThemeSection() {
+        this.themeSelector.classList.toggle('collapsed');
+        this.themeCollapseArrow.classList.toggle('rotated');
+        this.saveSettings();
+    }
+
     changeTheme(theme) {
         // Remove existing theme classes
-        document.body.classList.remove('dark-theme', 'light-theme', 'purple-theme', 'blue-theme');
+        document.body.classList.remove('dark-theme', 'light-theme', 'purple-theme', 'blue-theme', 'green-theme', 'orange-theme', 'pink-theme', 'red-theme', 'teal-theme', 'indigo-theme');
         
         // Add new theme class
         if (theme !== 'dark') {
@@ -745,7 +757,8 @@ class MusicPlayer {
             theme: this.getCurrentTheme(),
             performanceMode: this.performanceMode.checked,
             glassEffects: this.glassEffects.checked,
-            animatedBg: this.animatedBg.checked
+            animatedBg: this.animatedBg.checked,
+            themeSectionCollapsed: this.themeSelector.classList.contains('collapsed')
         };
         localStorage.setItem('musicPlayerSettings', JSON.stringify(settings));
     }
@@ -778,6 +791,12 @@ class MusicPlayer {
                     this.animatedBg.checked = parsed.animatedBg;
                     this.toggleAnimatedBackground();
                 }
+                
+                // Apply theme section collapse state
+                if (parsed.themeSectionCollapsed !== undefined && parsed.themeSectionCollapsed) {
+                    this.themeSelector.classList.add('collapsed');
+                    this.themeCollapseArrow.classList.add('rotated');
+                }
             }
         } catch (error) {
             console.error('Error loading settings:', error);
@@ -788,6 +807,12 @@ class MusicPlayer {
         if (document.body.classList.contains('light-theme')) return 'light';
         if (document.body.classList.contains('purple-theme')) return 'purple';
         if (document.body.classList.contains('blue-theme')) return 'blue';
+        if (document.body.classList.contains('green-theme')) return 'green';
+        if (document.body.classList.contains('orange-theme')) return 'orange';
+        if (document.body.classList.contains('pink-theme')) return 'pink';
+        if (document.body.classList.contains('red-theme')) return 'red';
+        if (document.body.classList.contains('teal-theme')) return 'teal';
+        if (document.body.classList.contains('indigo-theme')) return 'indigo';
         return 'dark';
     }
 
