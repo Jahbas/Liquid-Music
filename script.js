@@ -156,6 +156,9 @@ class MusicPlayer {
         this.logsClose = document.getElementById('logsClose');
         this.logsClear = document.getElementById('logsClear');
         this.logsList = document.getElementById('logsList');
+
+        // Discord button
+        this.discordBtn = document.querySelector('.discord-btn');
         
         // Confirmation modal elements
         this.confirmModal = document.getElementById('confirmModal');
@@ -275,6 +278,15 @@ class MusicPlayer {
             if (e.target === this.logsModal) this.hideLogs();
         });
         this.logsClear.addEventListener('click', () => this.showClearLogsConfirm());
+
+        // Discord confirmation
+        if (this.discordBtn) {
+            this.discordBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.pendingDiscordUrl = this.discordBtn.getAttribute('href');
+                this.showConfirmModal('Do you want to join our Discord server?', 'joinDiscord');
+            });
+        }
         
         // Confirmation modal events
         this.confirmCancel.addEventListener('click', () => this.hideConfirmModal());
@@ -330,6 +342,9 @@ class MusicPlayer {
         this.playlist.push(track);
         this.renderPlaylist();
         this.saveToStorage();
+
+        // Preload duration metadata so it shows without needing to play
+        this.preloadTrackMetadata(track).catch(() => {});
 
         this.pushAction('track_add', { targetId: 'current', targetLabel: 'Queue', tracks: [{ id: track.id, name: track.name }], count: 1 }, true);
 
@@ -1103,6 +1118,13 @@ class MusicPlayer {
     handleConfirmOk() {
         if (this.pendingAction === 'clearLogs') {
             this.clearLogs();
+        } else if (this.pendingAction === 'joinDiscord') {
+            const url = this.pendingDiscordUrl || 'https://discord.gg/SbQuPNJHnP';
+            try {
+                window.open(url, '_blank', 'noopener');
+                this.showNotification('Opening Discord…', 'fa-up-right-from-square');
+            } catch (_) {}
+            this.pendingDiscordUrl = null;
         }
         this.hideConfirmModal();
     }
@@ -1569,6 +1591,12 @@ class MusicPlayer {
                         }
                     })).then(() => {
                         this.renderPlaylist();
+                        // Fetch durations for tracks that don't have it yet
+                        this.playlist.forEach(t => {
+                            if (t.url && (!t.duration || t.duration === 0)) {
+                                this.preloadTrackMetadata(t).catch(() => {});
+                            }
+                        });
                     }).catch(() => {});
                 }
                 
@@ -1603,6 +1631,37 @@ class MusicPlayer {
         } catch (error) {
             console.error('Error loading from storage:', error);
         }
+    }
+
+    // Helper: Preload metadata to obtain duration without playing
+    preloadTrackMetadata(track) {
+        return new Promise((resolve) => {
+            try {
+                if (!track || !track.url) { resolve(); return; }
+                const tempAudio = new Audio();
+                tempAudio.preload = 'metadata';
+                const cleanup = () => {
+                    tempAudio.removeEventListener('loadedmetadata', onLoaded);
+                    tempAudio.removeEventListener('error', onError);
+                    // Do not set src to empty for object URLs we still use elsewhere
+                };
+                const onLoaded = () => {
+                    const duration = Number.isFinite(tempAudio.duration) ? tempAudio.duration : 0;
+                    if (duration && duration > 0) {
+                        track.duration = duration;
+                        this.renderPlaylist();
+                        this.saveToStorage();
+                    }
+                    cleanup();
+                    resolve();
+                };
+                const onError = () => { cleanup(); resolve(); };
+                tempAudio.addEventListener('loadedmetadata', onLoaded, { once: true });
+                tempAudio.addEventListener('error', onError, { once: true });
+                // Trigger metadata load
+                tempAudio.src = track.url;
+            } catch (_) { resolve(); }
+        });
     }
 
     formatTime(seconds) {
