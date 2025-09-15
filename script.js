@@ -161,6 +161,9 @@ class MusicPlayer {
 
         // Discord button
         this.discordBtn = document.querySelector('.discord-btn');
+
+        // Drag & drop overlay
+        this.dropOverlay = document.getElementById('dropOverlay');
         
         // Confirmation modal elements
         this.confirmModal = document.getElementById('confirmModal');
@@ -283,6 +286,9 @@ class MusicPlayer {
                 this.showConfirmModal('Do you want to join our Discord server?', 'joinDiscord');
             });
         }
+
+        // Global drag & drop for files/folders
+        this.bindDragAndDrop();
         
         // Confirmation modal events
         this.confirmCancel.addEventListener('click', () => this.hideConfirmModal());
@@ -343,7 +349,7 @@ class MusicPlayer {
         event.target.value = '';
     }
 
-    async addTrackToPlaylist(file) {
+    async addTrackToPlaylist(file, addToTop = false) {
         const id = await this.db.saveFile(file);
         const track = {
             id: id,
@@ -352,7 +358,11 @@ class MusicPlayer {
             duration: 0
         };
 
-        this.playlist.push(track);
+        if (addToTop) {
+            this.playlist.unshift(track);
+        } else {
+            this.playlist.push(track);
+        }
         this.renderPlaylist();
         this.saveToStorage();
 
@@ -1158,6 +1168,136 @@ class MusicPlayer {
         } else {
             if (existingOverlay) existingOverlay.remove();
             document.body.classList.remove('modal-open');
+        }
+    }
+
+    // Drag & Drop: bind global handlers
+    bindDragAndDrop() {
+        let dragCounter = 0;
+        
+        const showOverlay = () => {
+            if (this.dropOverlay) this.dropOverlay.classList.add('active');
+        };
+        const hideOverlay = () => {
+            if (this.dropOverlay) this.dropOverlay.classList.remove('active');
+        };
+
+        // Prevent default to allow drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+            document.addEventListener(evt, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        });
+
+        document.addEventListener('dragenter', (e) => {
+            dragCounter++;
+            if (dragCounter === 1) {
+                showOverlay();
+            }
+        });
+        
+        document.addEventListener('dragover', (e) => {
+            e.dataTransfer.dropEffect = 'copy';
+        });
+        
+        document.addEventListener('dragleave', (e) => {
+            dragCounter--;
+            if (dragCounter === 0) {
+                hideOverlay();
+            }
+        });
+        
+        document.addEventListener('drop', async (e) => {
+            dragCounter = 0;
+            hideOverlay();
+            const dt = e.dataTransfer;
+            if (!dt) return;
+            
+            const items = dt.items && dt.items.length ? Array.from(dt.items) : [];
+            const files = dt.files && dt.files.length ? Array.from(dt.files) : [];
+
+            if (items.length) {
+                await this.handleDroppedItems(items);
+            } else if (files.length) {
+                await this.handleDroppedFiles(files);
+            }
+        });
+    }
+
+    async handleDroppedItems(items) {
+        // Prefer DataTransferItem (can be directories via webkitGetAsEntry)
+        const audioFiles = [];
+        const traverseEntry = async (entry) => {
+            return new Promise((resolve) => {
+                try {
+                    if (entry.isFile) {
+                        entry.file((file) => {
+                            if (file && file.type && file.type.startsWith('audio/')) {
+                                audioFiles.push(file);
+                            }
+                            resolve();
+                        }, () => resolve());
+                    } else if (entry.isDirectory) {
+                        const reader = entry.createReader();
+                        reader.readEntries(async (entries) => {
+                            for (const ent of entries) {
+                                await traverseEntry(ent);
+                            }
+                            resolve();
+                        }, () => resolve());
+                    } else {
+                        resolve();
+                    }
+                } catch (_) { resolve(); }
+            });
+        };
+
+        const entries = [];
+        for (const item of items) {
+            try {
+                if (item.kind === 'file') {
+                    const entry = item.webkitGetAsEntry ? item.webkitGetAsEntry() : null;
+                    if (entry) entries.push(entry);
+                }
+            } catch (_) {}
+        }
+
+        if (entries.length) {
+            for (const entry of entries) {
+                await traverseEntry(entry);
+            }
+        } else {
+            // Fallback: treat as files
+            const files = [];
+            for (const item of items) {
+                try {
+                    const file = item.getAsFile && item.getAsFile();
+                    if (file && file.type && file.type.startsWith('audio/')) files.push(file);
+                } catch (_) {}
+            }
+            await this.handleDroppedFiles(files);
+            return;
+        }
+
+        if (audioFiles.length) {
+            this.showNotification(`Processing ${audioFiles.length} file${audioFiles.length>1?'s':''}...`, 'fa-spinner fa-spin');
+            for (const file of audioFiles) {
+                await this.addTrackToPlaylist(file, true); // Add to top of queue
+            }
+            this.showNotification(`Added ${audioFiles.length} file${audioFiles.length>1?'s':''} to top of queue`, 'fa-cloud-upload-alt');
+        }
+    }
+
+    async handleDroppedFiles(files) {
+        if (!files || !files.length) return;
+        const audioFiles = files.filter(f => f.type && f.type.startsWith('audio/'));
+        if (audioFiles.length) {
+            this.showNotification(`Processing ${audioFiles.length} file${audioFiles.length>1?'s':''}...`, 'fa-spinner fa-spin');
+            for (const file of audioFiles) {
+                await this.addTrackToPlaylist(file, true); // Add to top of queue
+            }
+            this.showNotification(`Added ${audioFiles.length} file${audioFiles.length>1?'s':''} to top of queue`, 'fa-cloud-upload-alt');
         }
     }
 
