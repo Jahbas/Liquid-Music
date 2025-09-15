@@ -172,6 +172,7 @@ body {
     grid-template-columns: 1fr 400px;
     gap: 30px;
     flex: 1;
+    align-items: start;
 }
 
 .player {
@@ -566,6 +567,8 @@ body.modal-open .player-overlay {
     padding: 30px;
     height: fit-content;
     overflow: visible;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Allow glow effects to extend beyond borders in dark theme */
@@ -810,24 +813,21 @@ body[data-theme="glass"] .playlist-management {
 .playlist-item:hover {
     background: rgba(255, 255, 255, 0.1);
     transform: translateX(5px);
-    box-shadow: 0 0 15px rgba(100, 149, 237, 0.3), 0 0 30px rgba(100, 149, 237, 0.15);
 }
 
 .playlist-item.active {
     background: linear-gradient(45deg, rgba(100, 149, 237, 0.2), rgba(100, 149, 237, 0.1));
     border-color: rgba(100, 149, 237, 0.4);
-    box-shadow: 0 0 0 2px rgba(100, 149, 237, 0.3);
 }
 
 .playlist-item.selected {
     background: linear-gradient(45deg, rgba(147, 51, 234, 0.4), rgba(147, 51, 234, 0.3)) !important;
-    border-color: rgba(147, 51, 234, 0.6) !important;
-    box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.5) !important;
+    border: 5px solid rgba(147, 51, 234, 0.8) !important;
 }
 
 .playlist-item.selected:hover {
     background: linear-gradient(45deg, rgba(147, 51, 234, 0.25), rgba(147, 51, 234, 0.15));
-    border-color: rgba(147, 51, 234, 0.5);
+    border: 5px solid rgba(147, 51, 234, 0.7);
 }
 
 .playlist-item-info {
@@ -1831,16 +1831,6 @@ body[data-theme="dark"] .playlist-tab.active {
 body[data-theme="dark"] .playlist-item.active {
     background: linear-gradient(45deg, rgba(60, 60, 60, 0.2), rgba(60, 60, 60, 0.1));
     border-color: rgba(140, 140, 140, 0.7);
-    box-shadow: 
-        0 0 0 2px rgba(140, 140, 140, 0.5),
-        0 0 20px rgba(140, 140, 140, 0.4),
-        0 0 40px rgba(140, 140, 140, 0.3),
-        inset 0 0 15px rgba(140, 140, 140, 0.15);
-    transform: scale(1.03);
-    transition: all 0.3s ease;
-    position: relative;
-    z-index: 15;
-    overflow: visible;
 }
 
 body[data-theme="dark"] .btn-primary {
@@ -2023,7 +2013,6 @@ body[data-theme="dark"] .playlist-item {
 body[data-theme="dark"] .playlist-item:hover {
     background: rgba(100, 100, 100, 0.2) !important;
     transform: translateX(5px);
-    box-shadow: 0 0 15px rgba(120, 120, 120, 0.4), 0 0 30px rgba(120, 120, 120, 0.2) !important;
 }
 
 body[data-theme="dark"] .playlist-tab {
@@ -2145,32 +2134,16 @@ body[data-theme="dark"] .player::before {
     background: linear-gradient(45deg, rgba(60, 60, 60, 0.1), rgba(60, 60, 60, 0.05)) !important;
 }
 
-/* Selection styles for CTRL+LMB in dark theme - greyish with glowing effect */
+/* Selection styles for CTRL+LMB in dark theme - greyish without glowing effect */
 body[data-theme="dark"] .playlist-item.selected {
     background: rgba(80, 80, 80, 0.3) !important;
-    border-color: rgba(120, 120, 120, 0.6) !important;
-    box-shadow: 
-        0 0 0 2px rgba(120, 120, 120, 0.4),
-        0 0 15px rgba(120, 120, 120, 0.3),
-        0 0 30px rgba(120, 120, 120, 0.2),
-        inset 0 0 10px rgba(120, 120, 120, 0.1) !important;
-    transform: scale(1.02);
-    transition: all 0.3s ease;
-    position: relative;
-    z-index: 10;
-    overflow: visible;
+    border: 5px solid rgba(120, 120, 120, 0.8) !important;
 }
 
 body[data-theme="dark"] .playlist-item.selecting {
     background: rgba(70, 70, 70, 0.2) !important;
     border-color: rgba(100, 100, 100, 0.5) !important;
-    box-shadow: 
-        0 0 0 1px rgba(100, 100, 100, 0.3),
-        0 0 10px rgba(100, 100, 100, 0.2) !important;
     transition: all 0.2s ease;
-    position: relative;
-    z-index: 5;
-    overflow: visible;
 }
 
 /* Allow glow to extend beyond edges while keeping content contained */
@@ -2293,55 +2266,22 @@ body[data-theme="glass"] .player.maximized:hover::before {
     }
 }
 
-body[data-theme="dark"] .playlist-item.selected {
-    animation: pulseGlow 2s ease-in-out infinite;
-}
 
-body[data-theme="dark"] .playlist-item.active {
-    animation: activePulseGlow 1.5s ease-in-out infinite;
-}
-
-/* Glass Theme Selection Styles - Same glowing effects */
+/* Glass Theme Selection Styles - No glowing effects */
 body[data-theme="glass"] .playlist-item.selected {
     background: rgba(100, 100, 255, 0.3) !important;
-    border-color: rgba(120, 120, 255, 0.6) !important;
-    box-shadow: 
-        0 0 0 2px rgba(120, 120, 255, 0.4),
-        0 0 15px rgba(120, 120, 255, 0.3),
-        0 0 30px rgba(120, 120, 255, 0.2),
-        inset 0 0 10px rgba(120, 120, 255, 0.1) !important;
-    transform: scale(1.02);
-    transition: all 0.3s ease;
-    position: relative;
-    z-index: 10;
-    overflow: visible;
+    border: 5px solid rgba(120, 120, 255, 0.8) !important;
 }
 
 body[data-theme="glass"] .playlist-item.selecting {
     background: rgba(80, 80, 255, 0.2) !important;
     border-color: rgba(100, 100, 255, 0.5) !important;
-    box-shadow: 
-        0 0 0 1px rgba(100, 100, 255, 0.3),
-        0 0 10px rgba(100, 100, 255, 0.2) !important;
     transition: all 0.2s ease;
-    position: relative;
-    z-index: 5;
-    overflow: visible;
 }
 
 body[data-theme="glass"] .playlist-item.active {
     background: linear-gradient(45deg, rgba(100, 100, 255, 0.2), rgba(100, 100, 255, 0.1));
     border-color: rgba(140, 140, 255, 0.7);
-    box-shadow: 
-        0 0 0 2px rgba(140, 140, 255, 0.5),
-        0 0 20px rgba(140, 140, 255, 0.4),
-        0 0 40px rgba(140, 140, 255, 0.3),
-        inset 0 0 15px rgba(140, 140, 255, 0.15);
-    transform: scale(1.03);
-    transition: all 0.3s ease;
-    position: relative;
-    z-index: 15;
-    overflow: visible;
 }
 
 /* Glass theme playlist tab active styling */
@@ -2405,13 +2345,6 @@ body[data-theme="glass"] .playlist-tab.active {
     }
 }
 
-body[data-theme="glass"] .playlist-item.selected {
-    animation: glassPulseGlow 2s ease-in-out infinite;
-}
-
-body[data-theme="glass"] .playlist-item.active {
-    animation: glassActivePulseGlow 1.5s ease-in-out infinite;
-}
 
 /* Glass theme container overflow settings for glow effects */
 body[data-theme="glass"] .playlist-container,
