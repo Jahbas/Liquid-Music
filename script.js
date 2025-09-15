@@ -1715,29 +1715,42 @@ class MusicPlayer {
     }
 
     deletePlaylist(playlistId) {
-        if (confirm('Are you sure you want to delete this playlist?')) {
-            const playlist = this.customPlaylists.get(playlistId);
-            if (playlist) {
-                // Revoke all object URLs
-                playlist.tracks.forEach(track => {
-                    URL.revokeObjectURL(track.url);
-                });
-            }
-            
-            // Capture for undo
-            const snapshot = playlist ? { id: playlistId, name: playlist.name, cover: playlist.cover, tracks: [...playlist.tracks] } : null;
-            this.customPlaylists.delete(playlistId);
-            
-            // Switch to current queue if we were viewing the deleted playlist
-            if (this.currentPlaylistId === playlistId) {
-                this.switchPlaylist('current');
-            }
-            
-            this.renderPlaylistTabs();
-            this.saveToStorage();
+        const playlist = this.customPlaylists.get(playlistId);
+        const playlistName = playlist ? playlist.name : 'Playlist';
+        const trackCount = playlist ? playlist.tracks.length : 0;
+        
+        const confirmMessage = `Are you sure you want to delete "${playlistName}"?\n\nThis will remove the playlist and ${trackCount} track${trackCount > 1 ? 's' : ''}. You can undo this action from the action logs.`;
+        
+        this.showConfirmDialog(confirmMessage, () => {
+            // User confirmed - proceed with deletion
+            this.performDeletePlaylist(playlistId);
+        });
+    }
 
-            if (snapshot) this.pushAction('playlist_delete', snapshot, true);
+    performDeletePlaylist(playlistId) {
+        const playlist = this.customPlaylists.get(playlistId);
+        if (playlist) {
+            // Revoke all object URLs
+            playlist.tracks.forEach(track => {
+                URL.revokeObjectURL(track.url);
+            });
         }
+        
+        // Capture for undo
+        const snapshot = playlist ? { id: playlistId, name: playlist.name, cover: playlist.cover, tracks: [...playlist.tracks] } : null;
+        this.customPlaylists.delete(playlistId);
+        
+        // Switch to current queue if we were viewing the deleted playlist
+        if (this.currentPlaylistId === playlistId) {
+            this.switchPlaylist('current');
+        }
+        
+        this.renderPlaylistTabs();
+        this.saveToStorage();
+
+        if (snapshot) this.pushAction('playlist_delete', snapshot, true);
+        
+        this.showNotification(`Deleted "${playlist.name}"`, 'fa-trash');
     }
 
     // Settings Management
@@ -2077,4 +2090,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Version: v2.2.1
+// Version: v2.2.2
