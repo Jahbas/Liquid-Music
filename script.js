@@ -289,6 +289,77 @@ class MusicPlayer {
 
         // Global drag & drop for files/folders
         this.bindDragAndDrop();
+
+        // Global paste (copy files from Explorer, paste into the page)
+        document.addEventListener('paste', async (e) => {
+            try {
+                const cd = e.clipboardData || window.clipboardData;
+                if (!cd) return;
+                const items = cd.items ? Array.from(cd.items) : [];
+                const filesList = cd.files ? Array.from(cd.files) : [];
+
+                // Collect files from both sources, then dedupe while preserving order preference: filesList first, then items
+                const collected = [];
+                const seen = new Set();
+                const pushIfNew = (f) => {
+                    if (!f) return;
+                    const key = `${f.name}|${f.size}|${f.lastModified || 0}`;
+                    if (!seen.has(key)) { seen.add(key); collected.push(f); }
+                };
+
+                // Some browsers expose multiple files only in cd.files
+                filesList.forEach(pushIfNew);
+                // Others expose in cd.items (and sometimes only the first in cd.files)
+                items.forEach((it) => {
+                    if (it.kind === 'file' && it.getAsFile) pushIfNew(it.getAsFile());
+                });
+
+                let audioFiles = collected.filter(f => this.isProbablyAudioFile(f));
+
+                // Fallback: some browsers expose only one file via clipboardData; try Async Clipboard API
+                if (audioFiles.length <= 1 && navigator.clipboard && navigator.clipboard.read) {
+                    try {
+                        const clipboardItems = await navigator.clipboard.read();
+                        const extra = [];
+                        for (const item of clipboardItems) {
+                            // Gather any audio blobs from the clipboard items
+                            for (const type of item.types) {
+                                if (type && type.startsWith('audio/')) {
+                                    const blob = await item.getType(type);
+                                    // Synthesize a File with a generic name if filename is unavailable
+                                    const fname = `Pasted Audio.${(type.split('/')[1] || 'bin')}`;
+                                    extra.push(new File([blob], fname, { type }));
+                                }
+                            }
+                        }
+                        if (extra.length) {
+                            // Merge and dedupe again
+                            extra.forEach(f => {
+                                const key = `${f.name}|${f.size}|${f.lastModified || 0}`;
+                                if (!seen.has(key)) { seen.add(key); audioFiles.push(f); }
+                            });
+                        }
+                    } catch (_) {
+                        // ignore, will proceed with what we have
+                    }
+                }
+
+                if (audioFiles.length) {
+                    e.preventDefault();
+                    this.showNotification(`Processing ${audioFiles.length} file${audioFiles.length>1?'s':''}...`, 'fa-spinner fa-spin');
+                    // Preserve order at the top: insert from last to first
+                    for (let i = audioFiles.length - 1; i >= 0; i--) {
+                        await this.addTrackToPlaylist(audioFiles[i], true);
+                    }
+                    this.showNotification(`Pasted ${audioFiles.length} file${audioFiles.length>1?'s':''} to top of queue`, 'fa-paste');
+                } else {
+                    // Inform user about browser limitations if nothing was processed
+                    this.showNotification('Your browser only pasted 1 file. Use drag & drop for multiple files.', 'fa-info-circle');
+                }
+            } catch (_) {
+                // no-op
+            }
+        });
         
         // Confirmation modal events
         this.confirmCancel.addEventListener('click', () => this.hideConfirmModal());
@@ -1282,8 +1353,9 @@ class MusicPlayer {
 
         if (audioFiles.length) {
             this.showNotification(`Processing ${audioFiles.length} file${audioFiles.length>1?'s':''}...`, 'fa-spinner fa-spin');
-            for (const file of audioFiles) {
-                await this.addTrackToPlaylist(file, true); // Add to top of queue
+            // Insert at top while preserving source order
+            for (let i = audioFiles.length - 1; i >= 0; i--) {
+                await this.addTrackToPlaylist(audioFiles[i], true);
             }
             this.showNotification(`Added ${audioFiles.length} file${audioFiles.length>1?'s':''} to top of queue`, 'fa-cloud-upload-alt');
         }
@@ -1294,8 +1366,9 @@ class MusicPlayer {
         const audioFiles = files.filter(f => f.type && f.type.startsWith('audio/'));
         if (audioFiles.length) {
             this.showNotification(`Processing ${audioFiles.length} file${audioFiles.length>1?'s':''}...`, 'fa-spinner fa-spin');
-            for (const file of audioFiles) {
-                await this.addTrackToPlaylist(file, true); // Add to top of queue
+            // Insert at top while preserving source order
+            for (let i = audioFiles.length - 1; i >= 0; i--) {
+                await this.addTrackToPlaylist(audioFiles[i], true);
             }
             this.showNotification(`Added ${audioFiles.length} file${audioFiles.length>1?'s':''} to top of queue`, 'fa-cloud-upload-alt');
         }
@@ -1827,6 +1900,19 @@ class MusicPlayer {
         return Array.from(this.selectedTracks)
             .filter(index => index >= 0 && index < currentPlaylist.length)
             .map(index => ({ index, track: currentPlaylist[index] }));
+    }
+
+    // Heuristic: treat as audio if MIME says audio/* or filename has a common audio extension
+    isProbablyAudioFile(file) {
+        try {
+            if (!file) return false;
+            if (file.type && file.type.startsWith('audio/')) return true;
+            const name = (file.name || '').toLowerCase();
+            const exts = ['.mp3', '.wav', '.flac', '.m4a', '.aac', '.ogg', '.oga', '.opus', '.wma'];
+            return exts.some(ext => name.endsWith(ext));
+        } catch (_) {
+            return false;
+        }
     }
 }
 
