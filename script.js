@@ -1998,3 +1998,5 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Version: v2.1.2
