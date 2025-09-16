@@ -163,6 +163,7 @@ class MusicPlayer {
         this.performanceMode = document.getElementById('performanceMode');
         this.glassEffects = document.getElementById('glassEffects');
         this.animatedBg = document.getElementById('animatedBg');
+        this.disableHover = document.getElementById('disableHover');
         this.themeButtons = document.querySelectorAll('.theme-btn');
         this.currentTheme = 'dark';
         
@@ -291,6 +292,7 @@ class MusicPlayer {
         this.performanceMode.addEventListener('change', () => this.togglePerformanceMode());
         this.glassEffects.addEventListener('change', () => this.toggleGlassEffects());
         this.animatedBg.addEventListener('change', () => this.toggleAnimatedBackground());
+        this.disableHover.addEventListener('change', () => this.applyHoverEffectsSetting());
         
         // Default volume events
         this.defaultVolumeSlider.addEventListener('input', () => this.updateDefaultVolumeFromSlider());
@@ -1911,8 +1913,8 @@ class MusicPlayer {
 
     describeActionTitle(action) {
         switch (action.type) {
-            case 'playlist_create': return `Created playlist “${action.data.name}”`;
-            case 'playlist_delete': return `Deleted playlist “${action.data.name}”`;
+            case 'playlist_create': return `Created playlist "${action.data.name}"`;
+            case 'playlist_delete': return `Deleted playlist "${action.data.name}"`;
             case 'track_add': return `Added ${action.data.count === 1 ? 'track' : action.data.count + ' tracks'} to ${action.data.targetLabel}`;
             case 'track_remove': return `Removed ${action.data.count === 1 ? 'track' : action.data.count + ' tracks'}`;
             case 'track_move': return `Moved ${action.data.count === 1 ? 'track' : action.data.count + ' tracks'} to ${action.data.targetLabel}`;
@@ -1988,7 +1990,7 @@ class MusicPlayer {
         if (this.currentPlaylistId === id) this.switchPlaylist('current');
         this.renderPlaylistTabs();
         this.saveToStorage();
-        this.showNotification(`Undid: created playlist “${action.data.name}”`, 'fa-undo');
+        this.showNotification(`Undid: created playlist "${action.data.name}"`, 'fa-undo');
     }
 
     undoDeletePlaylist(action) {
@@ -1997,7 +1999,7 @@ class MusicPlayer {
         this.customPlaylists.set(id, { name, cover, tracks });
         this.renderPlaylistTabs();
         this.saveToStorage();
-        this.showNotification(`Undid: deleted playlist “${name}”`, 'fa-undo');
+        this.showNotification(`Undid: deleted playlist "${name}"`, 'fa-undo');
     }
 
     undoTrackAdd(action) {
@@ -2248,6 +2250,17 @@ class MusicPlayer {
         this.saveSettings();
     }
 
+    applyHoverEffectsSetting() {
+        const isDisabled = !!(this.disableHover && this.disableHover.checked);
+        document.body.classList.toggle('no-hover', isDisabled);
+        try {
+            const raw = localStorage.getItem('musicPlayerSettings');
+            const parsed = raw ? JSON.parse(raw) : {};
+            parsed.noHover = isDisabled;
+            localStorage.setItem('musicPlayerSettings', JSON.stringify(parsed));
+        } catch (_) { /* ignore */ }
+    }
+
     changeTheme(theme) {
         // Remove current theme class
         document.body.classList.remove(`theme-${this.currentTheme}`);
@@ -2353,7 +2366,8 @@ class MusicPlayer {
             theme: this.currentTheme,
             performanceMode: this.performanceMode.checked,
             glassEffects: this.glassEffects.checked,
-            animatedBg: this.animatedBg.checked
+            animatedBg: this.animatedBg.checked,
+            noHover: document.body.classList.contains('no-hover')
         };
         localStorage.setItem('musicPlayerSettings', JSON.stringify(settings));
     }
@@ -2412,6 +2426,12 @@ class MusicPlayer {
                 if (parsed.animatedBg !== undefined) {
                     this.animatedBg.checked = parsed.animatedBg;
                     this.toggleAnimatedBackground();
+                }
+                
+                // Apply hover setting
+                if (parsed.noHover !== undefined) {
+                    if (this.disableHover) this.disableHover.checked = !!parsed.noHover;
+                    this.applyHoverEffectsSetting();
                 }
             } else {
                 // No settings saved, apply defaults
@@ -2702,6 +2722,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     musicPlayer = new MusicPlayer(db);
     musicPlayer.loadActionLog();
+
+    // Initialize live system clock
+    (function initSystemClock() {
+        const clockEl = document.getElementById('systemClock');
+        if (!clockEl) return;
+        const formatter = new Intl.DateTimeFormat(undefined, {
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
+            weekday: 'short', day: '2-digit', month: 'short'
+        });
+        const update = () => {
+            try {
+                const now = new Date();
+                clockEl.textContent = formatter.format(now);
+            } catch (err) {
+                // Fallback if Intl fails
+                const now = new Date();
+                clockEl.textContent = now.toLocaleTimeString();
+            }
+        };
+        update();
+        setInterval(update, 1000);
+    })();
 });
 
 // Add some visual effects

@@ -3415,3 +3415,340 @@ body[data-theme="dark"] .tooltip::before {
 }
 
 /* Version: v3.2.2.2 */
+
+/* Clock */
+.header-clock {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.clock {
+    padding: 22px 44px;
+    border-radius: 16px;
+    font-weight: 600;
+    font-size: 18px;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: inline-block;
+    line-height: 1.25;
+}
+
+@media (max-width: 768px) {
+    .header {
+        gap: 10px;
+    }
+    .header-clock {
+        order: 2;
+    }
+}
+
+/* Dark mode custom cursor */
+body[data-theme="dark"] {
+    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M2 2 L2 16 L6 12 L10 22 L13 21 L9 11 L16 11 Z' fill='%23ffffff' fill-opacity='0.6'/><path d='M2 2 L16 11 L9 11 L13 21 L10 22 L6 12 L2 16 Z' fill='none' stroke='%23000000' stroke-opacity='0.25' stroke-width='1'/></svg>") 2 2, auto;
+}
+
+/* Keep text caret for inputs/textareas in dark mode */
+body[data-theme="dark"] input,
+body[data-theme="dark"] textarea,
+body[data-theme="dark"] input[type="range"],
+body[data-theme="dark"] input[type="number"],
+body[data-theme="dark"] input[type="text"] {
+    cursor: text;
+}
+
+/* Use the same dimmed arrow over interactive elements; pointer as fallback */
+body[data-theme="dark"] a,
+body[data-theme="dark"] button,
+body[data-theme="dark"] .control-btn,
+body[data-theme="dark"] .upload-btn,
+body[data-theme="dark"] .playlist-item,
+body[data-theme="dark"] .playlist-tab,
+body[data-theme="dark"] .settings-toggle,
+body[data-theme="dark"] .logs-btn,
+body[data-theme="dark"] .artists-btn,
+body[data-theme="dark"] .discord-btn,
+body[data-theme="dark"] .collapse-btn {
+    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M2 2 L2 16 L6 12 L10 22 L13 21 L9 11 L16 11 Z' fill='%23ffffff' fill-opacity='0.7'/><path d='M2 2 L16 11 L9 11 L13 21 L10 22 L6 12 L2 16 Z' fill='none' stroke='%23000000' stroke-opacity='0.3' stroke-width='1'/></svg>") 2 2, pointer;
+}
+
+/* Theme-specific custom cursors */
+body[data-theme="dark"] {
+    cursor: url("assets/cursors/linux-dark.svg") 3 3, auto;
+}
+
+body[data-theme="glass"] {
+    cursor: url("assets/cursors/linux-light.svg") 3 3, auto;
+}
+
+/* Keep text caret for form fields */
+body[data-theme="dark"] input,
+body[data-theme="dark"] textarea,
+body[data-theme="dark"] input[type="range"],
+body[data-theme="dark"] input[type="number"],
+body[data-theme="dark"] input[type="text"],
+body[data-theme="glass"] input,
+body[data-theme="glass"] textarea,
+body[data-theme="glass"] input[type="range"],
+body[data-theme="glass"] input[type="number"],
+body[data-theme="glass"] input[type="text"] {
+    cursor: text;
+}
+
+/* Interactive elements should keep pointer behavior */
+body[data-theme="dark"] a,
+body[data-theme="dark"] button,
+body[data-theme="dark"] .control-btn,
+body[data-theme="dark"] .upload-btn,
+body[data-theme="dark"] .playlist-item,
+body[data-theme="dark"] .playlist-tab,
+body[data-theme="dark"] .settings-toggle,
+body[data-theme="dark"] .logs-btn,
+body[data-theme="dark"] .artists-btn,
+body[data-theme="dark"] .discord-btn,
+body[data-theme="dark"] .collapse-btn,
+body[data-theme="glass"] a,
+body[data-theme="glass"] button,
+body[data-theme="glass"] .control-btn,
+body[data-theme="glass"] .upload-btn,
+body[data-theme="glass"] .playlist-item,
+body[data-theme="glass"] .playlist-tab,
+body[data-theme="glass"] .settings-toggle,
+body[data-theme="glass"] .logs-btn,
+body[data-theme="glass"] .artists-btn,
+body[data-theme="glass"] .discord-btn,
+body[data-theme="glass"] .collapse-btn {
+    cursor: pointer;
+}
+
+/* Theme-specific custom cursors (dark mode) */
+body[data-theme="dark"] {
+    cursor: url("cursors/Cursor.cur"), auto;
+}
+
+/* Keep text caret for form fields in dark mode */
+body[data-theme="dark"] input,
+body[data-theme="dark"] textarea,
+body[data-theme="dark"] input[type="range"],
+body[data-theme="dark"] input[type="number"],
+body[data-theme="dark"] input[type="text"] {
+    cursor: url("cursors/SelectText.cur"), text;
+}
+
+/* Interactive elements use link pointer in dark mode */
+body[data-theme="dark"] a,
+body[data-theme="dark"] button,
+body[data-theme="dark"] .control-btn,
+body[data-theme="dark"] .upload-btn,
+body[data-theme="dark"] .playlist-item,
+body[data-theme="dark"] .playlist-tab,
+body[data-theme="dark"] .settings-toggle,
+body[data-theme="dark"] .logs-btn,
+body[data-theme="dark"] .artists-btn,
+body[data-theme="dark"] .discord-btn,
+body[data-theme="dark"] .collapse-btn {
+    cursor: url("cursors/SelectLink.cur"), pointer;
+}
+
+/* Theme-specific custom cursors (dark mode, smaller) */
+body[data-theme="dark"] {
+    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 32 32'><path d='M3 3 L3 22 L9.5 15.5 L14.5 29 L18.5 27.5 L13.5 14.5 L26 14.5 Z' fill='%23000000' stroke='%23FFFFFF' stroke-width='3.2' stroke-linejoin='round' stroke-linecap='round'/></svg>") 2 2, url("cursors/Cursor.cur"), auto;
+}
+
+/* Keep text caret for form fields in dark mode */
+body[data-theme="dark"] input,
+body[data-theme="dark"] textarea,
+body[data-theme="dark"] input[type="range"],
+body[data-theme="dark"] input[type="number"],
+body[data-theme="dark"] input[type="text"] {
+    cursor: url("cursors/SelectText.cur"), text;
+}
+
+/* Interactive elements use link pointer in dark mode */
+body[data-theme="dark"] a,
+body[data-theme="dark"] button,
+body[data-theme="dark"] .control-btn,
+body[data-theme="dark"] .upload-btn,
+body[data-theme="dark"] .playlist-item,
+body[data-theme="dark"] .playlist-tab,
+body[data-theme="dark"] .settings-toggle,
+body[data-theme="dark"] .logs-btn,
+body[data-theme="dark"] .artists-btn,
+body[data-theme="dark"] .discord-btn,
+body[data-theme="dark"] .collapse-btn {
+    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 32 32'><path d='M3 3 L3 22 L9.5 15.5 L14.5 29 L18.5 27.5 L13.5 14.5 L26 14.5 Z' fill='%23000000' stroke='%23FFFFFF' stroke-width='3.2' stroke-linejoin='round' stroke-linecap='round'/></svg>") 2 2, url("cursors/SelectLink.cur"), pointer;
+}
+
+/* Light/glass theme cursor smaller */
+body[data-theme="glass"] {
+    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 32 32'><path d='M3 3 L3 22 L9.5 15.5 L14.5 29 L18.5 27.5 L13.5 14.5 L26 14.5 Z' fill='%23E6E6E6' stroke='%23000000' stroke-width='3.2' stroke-linejoin='round' stroke-linecap='round'/></svg>") 2 2, auto;
+}
+
+/* Remove custom cursors and revert to system defaults */
+body[data-theme="dark"],
+body[data-theme="glass"] {
+    cursor: auto !important;
+}
+
+body[data-theme="dark"] input,
+body[data-theme="dark"] textarea,
+body[data-theme="dark"] input[type="range"],
+body[data-theme="dark"] input[type="number"],
+body[data-theme="dark"] input[type="text"],
+body[data-theme="glass"] input,
+body[data-theme="glass"] textarea,
+body[data-theme="glass"] input[type="range"],
+body[data-theme="glass"] input[type="number"],
+body[data-theme="glass"] input[type="text"] {
+    cursor: auto !important;
+}
+
+body[data-theme="dark"] a,
+body[data-theme="dark"] button,
+body[data-theme="dark"] .control-btn,
+body[data-theme="dark"] .upload-btn,
+body[data-theme="dark"] .playlist-item,
+body[data-theme="dark"] .playlist-tab,
+body[data-theme="dark"] .settings-toggle,
+body[data-theme="dark"] .logs-btn,
+body[data-theme="dark"] .artists-btn,
+body[data-theme="dark"] .discord-btn,
+body[data-theme="dark"] .collapse-btn,
+body[data-theme="glass"] a,
+body[data-theme="glass"] button,
+body[data-theme="glass"] .control-btn,
+body[data-theme="glass"] .upload-btn,
+body[data-theme="glass"] .playlist-item,
+body[data-theme="glass"] .playlist-tab,
+body[data-theme="glass"] .settings-toggle,
+body[data-theme="glass"] .logs-btn,
+body[data-theme="glass"] .artists-btn,
+body[data-theme="glass"] .discord-btn,
+body[data-theme="glass"] .collapse-btn {
+    cursor: auto !important;
+}
+
+/* Use the clock font in settings and upload buttons */
+.settings-content, .settings-content * {
+    font-family: 'Inter', sans-serif !important;
+}
+
+.upload-btn, .upload-btn span {
+    font-family: 'Inter', sans-serif !important;
+}
+
+/* Restore Font Awesome icons in settings (revert unintended change) */
+.settings-content i,
+.settings-content .fa,
+.settings-content [class^="fa-"],
+.settings-content [class*=" fa-"],
+.settings-content .fas,
+.settings-content .far,
+.settings-content .fal,
+.settings-content .fat,
+.settings-content .fad {
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 900 !important;
+}
+
+.settings-content .far { /* regular weight */
+    font-weight: 400 !important;
+}
+
+.settings-content .fab,
+.settings-content .fa-brands {
+    font-family: "Font Awesome 6 Brands" !important;
+    font-weight: 400 !important;
+}
+
+/* Disable all hover-driven visual effects when no-hover is enabled */
+body.no-hover .glass-card:hover,
+body.no-hover .player:hover::before,
+body.no-hover .album-art-container:hover,
+body.no-hover .control-btn:hover,
+body.no-hover .upload-btn:hover,
+body.no-hover .new-playlist-btn:hover,
+body.no-hover .clear-btn:hover,
+body.no-hover .logs-btn:hover,
+body.no-hover .artists-btn:hover,
+body.no-hover .discord-btn:hover,
+body.no-hover .collapse-btn:hover,
+body.no-hover .playlist-item:hover,
+body.no-hover .playlist-tab:hover,
+body.no-hover .artist-item:hover,
+body.no-hover .modal-close:hover,
+body.no-hover .settings-close:hover,
+body.no-hover .cover-upload:hover,
+body.no-hover .undo-btn:hover,
+body.no-hover .btn-secondary:hover,
+body.no-hover .btn-primary:hover,
+body.no-hover .confirm-btn-primary:hover,
+body.no-hover .playlist-item-remove:hover,
+body.no-hover .playlist-tab-remove:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    background: inherit !important;
+    opacity: inherit !important;
+}
+
+/* Prevent progress/volume handles from appearing on hover */
+body.no-hover .progress-bar:hover .progress-handle,
+body.no-hover .volume-bar:hover .volume-handle {
+    opacity: 0 !important;
+}
+
+/* Keep pointer events and basic styles; just remove hover visual changes */
+body.no-hover .playlist-item:hover { transform: none !important; }
+body.no-hover .playlist-tab.drag-over { box-shadow: none !important; background: inherit !important; }
+
+/* Themed text selection */
+body[data-theme="dark"] ::selection { background: rgba(120, 120, 120, 0.35); color: #ffffff; }
+body[data-theme="dark"] ::-moz-selection { background: rgba(120, 120, 120, 0.35); color: #ffffff; }
+body[data-theme="dark"] input::selection,
+body[data-theme="dark"] textarea::selection { background: rgba(120, 120, 120, 0.45); color: #ffffff; }
+
+body[data-theme="glass"] ::selection { background: rgba(100, 149, 237, 0.35); color: #ffffff; }
+body[data-theme="glass"] ::-moz-selection { background: rgba(100, 149, 237, 0.35); color: #ffffff; }
+body[data-theme="glass"] input::selection,
+body[data-theme="glass"] textarea::selection { background: rgba(100, 149, 237, 0.45); color: #ffffff; }
+
+/* Dark mode: dim bottom-right utility buttons to match control button colorway */
+body[data-theme="dark"] .discord-btn,
+body[data-theme="dark"] .logs-btn,
+body[data-theme="dark"] .artists-btn,
+body[data-theme="dark"] .collapse-btn {
+    background: rgba(60, 60, 60, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: none !important;
+}
+
+body[data-theme="dark"] .discord-btn:hover,
+body[data-theme="dark"] .logs-btn:hover,
+body[data-theme="dark"] .artists-btn:hover,
+body[data-theme="dark"] .collapse-btn:hover {
+    background: rgba(100, 100, 100, 0.3) !important;
+    transform: translateY(-2px) scale(1.05) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Dark mode: dim settings toggle to match control button colorway */
+body[data-theme="dark"] .settings-toggle {
+    background: rgba(60, 60, 60, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: none !important;
+}
+
+body[data-theme="dark"] .settings-toggle:hover {
+    background: rgba(100, 100, 100, 0.3) !important;
+    transform: translateY(-2px) scale(1.05) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Hide settings panel when bottom panels are collapsed */
+body.panels-collapsed .settings-panel {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(30px) scale(0.9);
+    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.15s;
+}

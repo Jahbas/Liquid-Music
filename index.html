@@ -22,6 +22,9 @@
                 <i class="fas fa-music"></i>
                 <span>Liquid Music</span>
             </div>
+            <div class="header-clock">
+                <div id="systemClock" class="clock glass-card" aria-live="polite">--:--:--</div>
+            </div>
             <div class="upload-section">
                 <input type="file" id="fileInput" accept="audio/*" multiple style="display: none;">
                 <input type="file" id="folderInput" webkitdirectory directory multiple style="display: none;">
@@ -235,6 +238,22 @@
                         <div class="setting-info">
                             <span class="setting-name">Animated Background</span>
                             <span class="setting-desc">Enable/disable floating orbs</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label class="setting-label">
+                        <i class="fas fa-hand-paper"></i>
+                        Hover Effects
+                    </label>
+                    <div class="setting-option">
+                        <label class="switch">
+                            <input type="checkbox" id="disableHover">
+                            <span class="slider"></span>
+                        </label>
+                        <div class="setting-info">
+                            <span class="setting-name">Disable Hover Effects</span>
                         </div>
                     </div>
                 </div>
