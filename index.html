@@ -39,7 +39,7 @@
         <!-- Main Player -->
         <main class="player-container">
             <div class="player glass-card">
-                <button class="player-maximize-btn" id="playerMaxBtn" title="Maximize player">
+                <button class="player-maximize-btn" id="playerMaxBtn" data-tooltip="Maximize player">
                     <i class="fas fa-expand"></i>
                 </button>
                 <!-- Album Art -->
@@ -107,7 +107,7 @@
                 <div class="playlist-header">
                     <h3><i class="fas fa-list"></i> Playlists</h3>
                     <div class="playlist-controls">
-                        <button class="new-playlist-btn" id="newPlaylistBtn" title="Create new playlist">
+                        <button class="new-playlist-btn" id="newPlaylistBtn" data-tooltip="Create new playlist">
                             <i class="fas fa-plus"></i>
                         </button>
                         <button class="clear-btn" id="clearBtn">
@@ -156,11 +156,11 @@
                         Theme
                     </label>
                     <div class="theme-selector">
-                        <button class="theme-btn active" data-theme="glass" title="Glass Theme">
+                        <button class="theme-btn active" data-theme="glass" data-tooltip="Glass Theme">
                             <i class="fas fa-gem"></i>
                             <span>Glass</span>
                         </button>
-                        <button class="theme-btn" data-theme="dark" title="Dark Theme">
+                        <button class="theme-btn" data-theme="dark" data-tooltip="Dark Theme">
                             <i class="fas fa-moon"></i>
                             <span>Dark</span>
                         </button>
@@ -244,21 +244,28 @@
 
     <!-- Discord Button -->
     <div class="discord-panel">
-        <a href="https://discord.gg/SbQuPNJHnP" target="_blank" class="discord-btn" title="Join our Discord server!">
+        <a href="https://discord.gg/SbQuPNJHnP" target="_blank" class="discord-btn" data-tooltip="Connect with our community!">
             <i class="fab fa-discord"></i>
         </a>
     </div>
 
     <!-- Artists Button -->
     <div class="artists-panel">
-        <button id="artistsToggle" class="artists-btn" title="Open Artists">
+        <button id="artistsToggle" class="artists-btn" data-tooltip="Open Artists">
             <i class="fas fa-user-circle"></i>
+        </button>
+    </div>
+
+    <!-- Collapse Button -->
+    <div class="collapse-panel">
+        <button id="collapseToggle" class="collapse-btn" data-tooltip="Collapse bottom panel">
+            <i class="fas fa-chevron-right"></i>
         </button>
     </div>
 
     <!-- Logs Button -->
     <div class="logs-panel">
-        <button id="logsToggle" class="logs-btn" title="Open Action Logs">
+        <button id="logsToggle" class="logs-btn" data-tooltip="Open Action Logs">
             <i class="fas fa-clipboard-list"></i>
         </button>
     </div>
@@ -395,4 +402,4 @@
     </div>
 </body>
 </html>
-<!-- Version: v3.2.1 -->
+<!-- Version: v3.2.2 -->

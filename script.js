@@ -176,6 +176,7 @@ class MusicPlayer {
         this.artistsModal = document.getElementById('artistsModal');
         this.artistsClose = document.getElementById('artistsClose');
         this.artistsList = document.getElementById('artistsList');
+        this.collapseToggle = document.getElementById('collapseToggle');
 
         // Logs UI elements
         this.logsToggle = document.getElementById('logsToggle');
@@ -320,6 +321,9 @@ class MusicPlayer {
             if (e.target === this.artistsModal) this.hideArtists();
         });
 
+        // Collapse button
+        this.collapseToggle.addEventListener('click', () => this.toggleBottomPanels());
+
         // Logs events
         this.logsToggle.addEventListener('click', () => this.showLogs());
         this.logsClose.addEventListener('click', () => this.hideLogs());
@@ -334,9 +338,12 @@ class MusicPlayer {
             this.discordBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 this.pendingDiscordUrl = this.discordBtn.getAttribute('href');
-                this.showConfirmModal('Do you want to join our Discord server?', 'joinDiscord');
+                this.showConfirmModal('Do you want to connect with our community?', 'joinDiscord');
             });
         }
+
+        // Custom tooltip system
+        this.initCustomTooltips();
 
         // Global drag & drop for files/folders
         this.bindDragAndDrop();
@@ -1406,6 +1413,105 @@ class MusicPlayer {
     hideArtists() {
         this.artistsModal.classList.remove('active');
         document.body.classList.remove('modal-open');
+    }
+
+    toggleBottomPanels() {
+        const isCollapsed = document.body.classList.contains('panels-collapsed');
+        
+        if (isCollapsed) {
+            // Expand panels
+            document.body.classList.remove('panels-collapsed');
+            this.collapseToggle.classList.remove('expanded');
+            this.collapseToggle.setAttribute('data-tooltip', 'Collapse bottom panel');
+        } else {
+            // Collapse panels
+            document.body.classList.add('panels-collapsed');
+            this.collapseToggle.classList.add('expanded');
+            this.collapseToggle.setAttribute('data-tooltip', 'Expand bottom panel');
+        }
+    }
+
+    initCustomTooltips() {
+        // Create tooltip element
+        this.tooltip = document.createElement('div');
+        this.tooltip.className = 'tooltip';
+        document.body.appendChild(this.tooltip);
+
+        // Tooltip delay timer and position tracking
+        this.tooltipTimer = null;
+        this.tooltipPosition = null;
+
+        // Find all elements with data-tooltip
+        const tooltipElements = document.querySelectorAll('[data-tooltip]');
+        
+        tooltipElements.forEach(element => {
+            element.addEventListener('mouseenter', (e) => this.startTooltipTimer(e));
+            element.addEventListener('mouseleave', () => this.hideTooltip());
+        });
+    }
+
+    startTooltipTimer(event) {
+        // Clear any existing timer
+        if (this.tooltipTimer) {
+            clearTimeout(this.tooltipTimer);
+        }
+
+        // Start new timer for 1 second
+        this.tooltipTimer = setTimeout(() => {
+            this.showTooltip(event);
+        }, 1000);
+    }
+
+    showTooltip(event) {
+        const element = event.target.closest('[data-tooltip]');
+        if (!element) return;
+
+        const text = element.getAttribute('data-tooltip');
+        this.tooltip.textContent = text;
+        this.tooltip.classList.add('show');
+        
+        // Calculate and store position once
+        this.calculateTooltipPosition(element);
+    }
+
+    hideTooltip() {
+        // Clear timer if tooltip hasn't shown yet
+        if (this.tooltipTimer) {
+            clearTimeout(this.tooltipTimer);
+            this.tooltipTimer = null;
+        }
+        
+        this.tooltip.classList.remove('show');
+        this.tooltipPosition = null;
+    }
+
+    calculateTooltipPosition(element) {
+        const rect = element.getBoundingClientRect();
+        const tooltipRect = this.tooltip.getBoundingClientRect();
+        
+        // Position tooltip above the element
+        let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+        let top = rect.top - tooltipRect.height - 8;
+
+        // Keep tooltip within viewport
+        if (left < 8) left = 8;
+        if (left + tooltipRect.width > window.innerWidth - 8) {
+            left = window.innerWidth - tooltipRect.width - 8;
+        }
+        if (top < 8) {
+            // Position below if not enough space above
+            top = rect.bottom + 8;
+            this.tooltip.style.transform = 'translateY(0)';
+        } else {
+            this.tooltip.style.transform = 'translateY(0)';
+        }
+
+        // Store the position
+        this.tooltipPosition = { left, top };
+        
+        // Apply the position
+        this.tooltip.style.left = left + 'px';
+        this.tooltip.style.top = top + 'px';
     }
 
     updateArtistsList() {
@@ -2644,4 +2750,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Version: v3.2.1
+// Version: v3.2.2

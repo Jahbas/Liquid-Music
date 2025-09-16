@@ -1438,6 +1438,7 @@ body[data-theme="glass"] .playlist-management {
     bottom: 20px;
     right: 80px;
     z-index: 1000;
+    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .artists-panel {
@@ -1445,6 +1446,86 @@ body[data-theme="glass"] .playlist-management {
     bottom: 20px;
     right: 200px;
     z-index: 1000;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Collapse panel */
+.collapse-panel {
+    position: fixed;
+    bottom: 20px;
+    right: 260px;
+    z-index: 1000;
+    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.collapse-panel.collapsed {
+    bottom: 20px;
+    right: 20px;
+}
+
+.collapse-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, rgba(255, 193, 7, 0.3), rgba(255, 193, 7, 0.1));
+    border: 1px solid rgba(255, 193, 7, 0.2);
+    color: rgba(255, 193, 7, 0.8);
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.collapse-btn:hover {
+    background: linear-gradient(45deg, rgba(255, 193, 7, 0.4), rgba(255, 193, 7, 0.2));
+    border-color: rgba(255, 193, 7, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 193, 7, 0.2);
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.collapse-btn:active {
+    transform: translateY(0);
+}
+
+.collapse-btn.expanded {
+    transform: rotate(180deg);
+    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.collapse-btn.expanded i {
+    transform: rotate(180deg);
+    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Hide bottom panels when collapsed */
+body.panels-collapsed .discord-panel {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(30px) scale(0.9);
+    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s;
+}
+
+body.panels-collapsed .logs-panel {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(30px) scale(0.9);
+    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s;
+}
+
+body.panels-collapsed .artists-panel {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(30px) scale(0.9);
+    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0s;
+}
+
+body.panels-collapsed .collapse-panel {
+    right: 20px;
 }
 
 .logs-panel {
@@ -1452,6 +1533,7 @@ body[data-theme="glass"] .playlist-management {
     bottom: 20px;
     right: 140px;
     z-index: 1000;
+    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .artists-btn {
@@ -2390,6 +2472,19 @@ body[data-theme="dark"] .artist-item:hover .artist-action {
     background: rgba(100, 100, 100, 0.2) !important;
 }
 
+/* Dark theme collapse button */
+body[data-theme="dark"] .collapse-btn {
+    background: linear-gradient(45deg, rgba(100, 100, 100, 0.3), rgba(100, 100, 100, 0.1)) !important;
+    border: 1px solid rgba(100, 100, 100, 0.2) !important;
+    color: rgba(200, 200, 200, 0.8) !important;
+}
+
+body[data-theme="dark"] .collapse-btn:hover {
+    background: linear-gradient(45deg, rgba(100, 100, 100, 0.4), rgba(100, 100, 100, 0.2)) !important;
+    border-color: rgba(100, 100, 100, 0.3) !important;
+    box-shadow: 0 6px 20px rgba(100, 100, 100, 0.2) !important;
+}
+
 
 
 body[data-theme="dark"] .set-default-btn {
@@ -3272,4 +3367,53 @@ body[data-theme="dark"] .cover-preview:hover img {
     box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
 }
 
-/* Version: v3.2.1 */
+/* Custom Tooltip Styles */
+.tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    z-index: 10000;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(5px);
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.tooltip.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.tooltip::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 5px solid rgba(0, 0, 0, 0.9);
+}
+
+/* Dark theme tooltip */
+body[data-theme="dark"] .tooltip {
+    background: rgba(30, 30, 30, 0.95);
+    border: 1px solid rgba(100, 100, 100, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+body[data-theme="dark"] .tooltip::before {
+    border-bottom-color: rgba(30, 30, 30, 0.95);
+}
+
+/* Version: v3.2.2 */
