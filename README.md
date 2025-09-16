@@ -7,9 +7,9 @@
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 ![Browser Support](https://img.shields.io/badge/Browser%20Support-Modern%20Browsers-orange)
 
-*A stunning, modern music player with liquid glass aesthetics and smooth animations*
+*A stunning, modern music player with liquid glass aesthetics, album art display, and intelligent metadata extraction*
 
-[🚀 Quick Start](#-quick-start) • [✨ Features](#-features) • [🎮 Controls](#-controls)
+[🚀 Quick Start](#-quick-start) • [✨ Features](#-features) • [🎮 Controls](#-controls) • [📊 Metadata System](#-metadata-system)
 
 </div>
 
@@ -17,20 +17,24 @@
 
 ## 🌟 What Makes This Special?
 
-Experience music like never before with our **Liquid Glass Music Player** - a beautifully crafted web application that combines cutting-edge design with powerful functionality. Featuring mesmerizing glassmorphism effects, smooth animations, and an intuitive interface that makes managing your music collection a joy.
+Experience music like never before with our **Liquid Glass Music Player v3.0.0** - a beautifully crafted web application that combines cutting-edge design with powerful functionality. Featuring mesmerizing glassmorphism effects, automatic album art display, intelligent metadata extraction, and an intuitive interface that makes managing your music collection a joy.
 
 ### 🎨 Visual Excellence
 - **Liquid Glass Design**: Translucent cards with backdrop blur effects that create depth and elegance
+- **Dynamic Album Art**: Automatic display of album covers from your music files
+- **Smart Animations**: Spinning CD animation only when no album art is available
 - **Animated Background**: Floating gradient orbs that dance across your screen
 - **Smooth Transitions**: Every interaction feels fluid and responsive
-- **Dark Theme**: Easy on the eyes with carefully chosen color palettes
+- **Dark/Light Themes**: Easy theme switching with proper album art visibility
 
 ### 🎵 Powerful Features
+- **Intelligent Metadata Extraction**: Reads artist, album, title, year, genre from audio files
+- **Album Art Display**: Shows cover images extracted from ID3 tags and other metadata
 - **Smart File Management**: Upload individual files or entire folders with automatic audio detection
-- **Custom Playlists**: Create unlimited playlists with custom names and album covers
+- **Custom Playlists**: Create unlimited playlists with custom names
 - **Persistent Storage**: Your music library is automatically saved and restored
 - **Advanced Controls**: Full playback control with shuffle, repeat, and volume management
-- **Performance Optimized**: Built for speed with optional performance mode
+- **Multi-Format Support**: MP3, FLAC, MP4, OGG, WMA with proper metadata reading
 
 ---
 
@@ -38,17 +42,25 @@ Experience music like never before with our **Liquid Glass Music Player** - a be
 
 ### 🎨 **Design & Aesthetics**
 - **Glassmorphism Effects**: Beautiful translucent cards with backdrop blur
+- **Dynamic Album Art**: Automatic display of album covers from metadata
+- **Smart Visual Feedback**: Spinning CD animation only when no album art present
 - **Animated Gradient Orbs**: Dynamic background elements for visual appeal
 - **Smooth Hover Effects**: Interactive feedback on all elements
 - **Responsive Design**: Perfect on desktop, tablet, and mobile devices
-- **Modern Typography**: Clean, readable fonts with perfect spacing
+- **Theme Support**: Light and dark modes with proper album art visibility
 
-### 🎵 **Music Management**
+### 🎵 **Music Management & Metadata**
+- **Intelligent Metadata Extraction**: 
+  - Reads ID3 tags from MP3 files
+  - Extracts Vorbis comments from FLAC/OGG files
+  - Parses iTunes metadata from MP4/M4A files
+  - Handles ASF metadata from WMA files
+- **Album Art Extraction**: Automatically displays cover images from audio files
+- **Smart Fallback**: Uses filename parsing when metadata tags are unavailable
 - **Drag & Drop Support**: Simply drag files or folders onto the player
-- **Multiple Upload Methods**: File picker, folder selection, and clipboard paste
-- **Custom Playlists**: Create themed collections with custom names and covers
-- **Smart Organization**: Automatic audio file detection and filtering
-- **Persistent Storage**: All your music and settings saved locally
+- **Multiple Upload Methods**: File picker, folder selection
+- **Custom Playlists**: Create themed collections with custom names
+- **Persistent Storage**: All your music, metadata, and settings saved locally
 
 ### 🎮 **Playback Controls**
 - **Full Player Controls**: Play, pause, skip, shuffle, and repeat modes
@@ -56,37 +68,70 @@ Experience music like never before with our **Liquid Glass Music Player** - a be
 - **Volume Control**: Smooth real-time volume adjustment
 - **Keyboard Shortcuts**: Space to play/pause, arrows to skip, M to mute
 - **Visual Feedback**: Loading states and smooth transitions
+- **Track Information**: Displays title, artist, and album from metadata
 
-### ⚙️ **Customization & Performance**
-- **Performance Mode**: Disable animations for better performance on low-end devices
-- **Visual Effects Toggle**: Enable/disable glass effects and animated background
+### ⚙️ **Advanced Features**
+- **Python Backend**: Robust metadata extraction using mutagen library
+- **Performance Optimized**: Built for speed with efficient memory management
 - **Action Logs**: Track all your actions with undo functionality
 - **Settings Panel**: Easy access to all customization options
-
-### 🔗 **Community & Support**
-- **Discord Integration**: Join our community server for support and updates
-- **Action History**: Complete log of all actions with undo capabilities
-- **Helpful Tooltips**: Contextual help throughout the interface
+- **Error Handling**: Graceful fallbacks when metadata extraction fails
 
 ---
 
 ## 🚀 Quick Start
 
-### 🐍 **Option 1: Python Server (Recommended)**
+### 🐍 **Option 1: Python Server (Recommended for Full Features)**
 ```bash
 # Clone or download the project
 cd Liquid-Music
+
+# Install dependencies (first time only)
+python install_dependencies.py
 
 # Start the server
 python server.py
 ```
 Then open **http://localhost:8000** in your browser.
 
-### 📁 **Option 2: Direct File Access**
+**Note**: The Python server enables full metadata extraction and album art display.
+
+### 📁 **Option 2: Direct File Access (Basic Features)**
 Simply open `index.html` in your web browser - no server required!
 
+**Note**: Without the Python server, only basic filename-based metadata will be available.
+
 ### 🌐 **Option 3: Live Demo**
-Want to try it first? The player works entirely in your browser with no external dependencies.
+The player works entirely in your browser with no external dependencies for basic functionality.
+
+---
+
+## 📊 Metadata System
+
+### 🔍 **Supported Audio Formats & Metadata**
+| Format | Metadata Support | Album Art | Notes |
+|--------|------------------|-----------|-------|
+| **MP3** | ✅ ID3v1, ID3v2.3, ID3v2.4 | ✅ APIC frames | Most common format |
+| **FLAC** | ✅ Vorbis comments | ✅ METADATA_BLOCK_PICTURE | Lossless compression |
+| **MP4/M4A** | ✅ iTunes metadata | ✅ covr atoms | Apple's audio format |
+| **OGG** | ✅ Vorbis comments | ✅ METADATA_BLOCK_PICTURE | Open source format |
+| **WMA** | ✅ ASF metadata | ⚠️ Limited support | Windows Media Audio |
+
+### 🎯 **Extracted Information**
+- **Title**: Song title from metadata tags
+- **Artist**: Artist name from metadata tags
+- **Album**: Album name from metadata tags
+- **Year**: Release year from metadata tags
+- **Genre**: Music genre from metadata tags
+- **Track Number**: Track position in album
+- **Duration**: Song length in seconds
+- **Album Art**: Cover image (resized to 300x300px for optimal display)
+
+### 🔄 **Fallback System**
+When metadata tags are not available, the system intelligently parses filenames using patterns like:
+- `Artist - Song Title`
+- `Artist - Album - Song Title`
+- `Artist - Song Title (Year)`
 
 ---
 
@@ -120,37 +165,23 @@ Want to try it first? The player works entirely in your browser with no external
 - **Shuffle**: Randomize track order
 - **Repeat**: Cycle through no repeat → repeat all → repeat one
 - **Clear**: Remove all tracks from current playlist
-- **Maximize**: Click the expand button for full-screen player
-
----
-
-## 📁 Supported Audio Formats
-
-The player supports all audio formats that your browser can play:
-
-| Format | Support | Notes |
-|--------|---------|-------|
-| **MP3** | ✅ Full | Most common format |
-| **WAV** | ✅ Full | Uncompressed audio |
-| **OGG** | ✅ Full | Open source format |
-| **M4A** | ✅ Full | Apple's audio format |
-| **FLAC** | ✅ Full | Lossless compression |
-| **AAC** | ✅ Full | Advanced audio coding |
+- **Theme Toggle**: Switch between light and dark modes
 
 ---
 
 ## 🛠️ Technical Details
 
 ### 🏗️ **Architecture**
-- **Pure Web Technologies**: HTML5, CSS3, and Vanilla JavaScript
-- **No Dependencies**: Except Font Awesome for icons
-- **Web Audio API**: Native browser audio capabilities
-- **IndexedDB**: Efficient local storage for uploaded files
-- **Object URLs**: Smart memory management
+- **Frontend**: Pure HTML5, CSS3, and Vanilla JavaScript
+- **Backend**: Python HTTP server with mutagen library
+- **Storage**: IndexedDB for persistent file storage
+- **Metadata**: Python-based extraction with JavaScript fallback
+- **Album Art**: Base64 encoded images with automatic resizing
 
 ### 🎯 **Performance**
 - **Lazy Loading**: Tracks loaded on demand
 - **Memory Efficient**: Automatic cleanup of unused resources
+- **Image Optimization**: Album art resized to 300x300px maximum
 - **Smooth Animations**: Hardware-accelerated CSS transitions
 - **Responsive**: Optimized for all screen sizes
 
@@ -160,50 +191,65 @@ The player supports all audio formats that your browser can play:
 - ✅ Safari 12+
 - ✅ Edge 79+
 
+### 🐍 **Python Dependencies**
+- **mutagen**: Audio metadata extraction
+- **Pillow**: Image processing for album art
+- **http.server**: Built-in HTTP server
+
 ---
 
 ## 🎯 Pro Tips
 
 ### 🎵 **Music Management**
-1. **Bulk Upload**: Select multiple files at once for quick playlist building
-2. **Folder Upload**: Use "Upload Folder" to add entire music directories
-3. **Custom Playlists**: Create themed collections (e.g., "Workout", "Chill", "Party")
-4. **Album Covers**: Upload custom images for your playlists
+1. **Use Python Server**: For full metadata and album art support
+2. **Bulk Upload**: Select multiple files at once for quick playlist building
+3. **Folder Upload**: Use "Upload Folder" to add entire music directories
+4. **Custom Playlists**: Create themed collections (e.g., "Workout", "Chill", "Party")
 5. **Drag & Drop**: Drag files directly onto the player for instant upload
 
-### ⚡ **Performance**
-6. **Performance Mode**: Enable for smoother experience on older devices
-7. **Visual Effects**: Toggle glass effects and animations as needed
-8. **Memory Management**: The player automatically cleans up unused files
+### 🎨 **Album Art & Metadata**
+6. **Tag Your Files**: Use tools like MP3Tag to add proper metadata
+7. **Album Art Quality**: Higher resolution images are automatically resized
+8. **Fallback Parsing**: Ensure filenames follow "Artist - Title" format for best results
+9. **Theme Switching**: Album art displays properly in both light and dark modes
 
-### 🎮 **Usage**
-9. **Keyboard Navigation**: Use shortcuts for quick control
-10. **Mobile Friendly**: Touch-optimized interface for mobile devices
-11. **Action Logs**: Track and undo any changes you make
-12. **Settings**: Customize your experience in the settings panel
+### ⚡ **Performance**
+10. **Python Server**: Always use the Python server for best experience
+11. **Memory Management**: The player automatically cleans up unused files
+12. **Error Handling**: Failed metadata extraction gracefully falls back to filename parsing
 
 ---
 
-## 🔧 Customization
+## 🔧 Installation & Setup
 
-The player is built with modularity in mind, making it easy to customize:
-
-### 🎨 **Visual Customization**
-```css
-/* Modify colors in styles.css */
-:root {
-  --primary-color: #667eea;
-  --secondary-color: #764ba2;
-  --accent-color: #ff6b6b;
-}
+### 📦 **Automatic Setup (Recommended)**
+```bash
+# Run the dependency installer
+python install_dependencies.py
 ```
 
-### ⚙️ **Feature Extension**
-```javascript
-// Add new functionality by extending the MusicPlayer class
-class CustomMusicPlayer extends MusicPlayer {
-  // Your custom methods here
-}
+### 🔧 **Manual Setup**
+```bash
+# Install Python dependencies
+pip install mutagen>=1.47.0
+pip install Pillow>=9.0.0
+
+# Start the server
+python server.py
+```
+
+### 📁 **File Structure**
+```
+Liquid-Music/
+├── index.html              # Main application
+├── script.js               # Core functionality
+├── styles.css              # Styling and animations
+├── server.py               # Python HTTP server
+├── metadata_reader.py      # Metadata extraction engine
+├── install_dependencies.py # Dependency installer
+├── requirements.txt        # Python dependencies
+├── METADATA_README.md      # Metadata system documentation
+└── README.md              # This file
 ```
 
 ---
@@ -213,9 +259,10 @@ class CustomMusicPlayer extends MusicPlayer {
 The Liquid Glass Music Player is fully responsive and optimized for mobile devices:
 
 - **Touch-Friendly**: Large, easy-to-tap controls
-- **Swipe Gestures**: Natural mobile interactions
+- **Album Art Display**: Properly scaled for mobile screens
 - **Adaptive Layout**: Automatically adjusts to screen size
 - **Performance Optimized**: Smooth experience on mobile devices
+- **Theme Support**: Dark mode optimized for mobile viewing
 
 ---
 
@@ -228,6 +275,7 @@ We welcome contributions! Here's how you can help:
 3. **Code Contributions**: Submit pull requests for improvements
 4. **Documentation**: Help improve our documentation
 5. **Testing**: Test on different browsers and devices
+6. **Metadata Support**: Help add support for additional audio formats
 
 ---
 
@@ -243,10 +291,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Ready to experience music like never before?**
 
-[🚀 Get Started Now](#-quick-start) • [💬 Join Discord](https://discord.gg/SbQuPNJHnP) • [⭐ Star This Project](#)
+[🚀 Get Started Now](#-quick-start) • [📊 Learn About Metadata](#-metadata-system) • [⭐ Star This Project](#)
 
 ---
 
 *Made with ❤️ for music lovers everywhere*
+
+**Version: v3.0.0**
 
 </div>
