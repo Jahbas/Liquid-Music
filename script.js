@@ -87,6 +87,7 @@ class MusicPlayer {
         this.setupAudio();
         this.loadFromStorage();
         this.loadSettings();
+        this.loadDefaultVolume();
         
         // Set default theme if none is loaded
         if (!document.body.getAttribute('data-theme')) {
@@ -164,6 +165,11 @@ class MusicPlayer {
         this.animatedBg = document.getElementById('animatedBg');
         this.themeButtons = document.querySelectorAll('.theme-btn');
         this.currentTheme = 'glass';
+        
+        // Default volume elements
+        this.defaultVolumeSlider = document.getElementById('defaultVolume');
+        this.defaultVolumeInput = document.getElementById('defaultVolumeInput');
+        this.setDefaultBtn = document.getElementById('setDefaultBtn');
 
         // Logs UI elements
         this.logsToggle = document.getElementById('logsToggle');
@@ -278,6 +284,12 @@ class MusicPlayer {
         this.performanceMode.addEventListener('change', () => this.togglePerformanceMode());
         this.glassEffects.addEventListener('change', () => this.toggleGlassEffects());
         this.animatedBg.addEventListener('change', () => this.toggleAnimatedBackground());
+        
+        // Default volume events
+        this.defaultVolumeSlider.addEventListener('input', () => this.updateDefaultVolumeFromSlider());
+        this.defaultVolumeInput.addEventListener('input', () => this.updateDefaultVolumeFromInput());
+        this.defaultVolumeInput.addEventListener('blur', () => this.validateVolumeInput());
+        this.setDefaultBtn.addEventListener('click', () => this.setCurrentVolumeAsDefault());
         
         // Theme events
         this.themeButtons.forEach(button => {
@@ -1987,6 +1999,84 @@ class MusicPlayer {
         this.showNotification(`Switched to ${themeName} theme`, 'fa-palette');
     }
 
+    updateDefaultVolumeFromSlider() {
+        const volume = parseInt(this.defaultVolumeSlider.value) / 100;
+        this.defaultVolumeInput.value = this.defaultVolumeSlider.value;
+        
+        // Save to localStorage
+        localStorage.setItem('defaultVolume', volume.toString());
+        
+        // Show notification
+        this.showNotification(`Default volume set to ${this.defaultVolumeSlider.value}%`, 'fa-volume-up');
+    }
+
+    updateDefaultVolumeFromInput() {
+        let value = parseInt(this.defaultVolumeInput.value);
+        
+        // Validate range
+        if (value < 0) value = 0;
+        if (value > 100) value = 100;
+        
+        this.defaultVolumeInput.value = value;
+        this.defaultVolumeSlider.value = value;
+        
+        const volume = value / 100;
+        
+        // Save to localStorage
+        localStorage.setItem('defaultVolume', volume.toString());
+        
+        // Show notification
+        this.showNotification(`Default volume set to ${value}%`, 'fa-volume-up');
+    }
+
+    validateVolumeInput() {
+        let value = parseInt(this.defaultVolumeInput.value);
+        
+        // Validate and correct if needed
+        if (isNaN(value) || value < 0) {
+            value = 0;
+        } else if (value > 100) {
+            value = 100;
+        }
+        
+        this.defaultVolumeInput.value = value;
+        this.defaultVolumeSlider.value = value;
+        
+        const volume = value / 100;
+        localStorage.setItem('defaultVolume', volume.toString());
+    }
+
+    setCurrentVolumeAsDefault() {
+        const currentVolume = Math.round(this.volume * 100);
+        
+        // Update the default volume controls
+        this.defaultVolumeSlider.value = currentVolume;
+        this.defaultVolumeInput.value = currentVolume;
+        
+        // Save to localStorage
+        localStorage.setItem('defaultVolume', this.volume.toString());
+        
+        // Show notification
+        this.showNotification(`Default volume set to ${currentVolume}%`, 'fa-save');
+    }
+
+    loadDefaultVolume() {
+        const savedVolume = localStorage.getItem('defaultVolume');
+        if (savedVolume !== null) {
+            const volume = parseFloat(savedVolume);
+            this.volume = volume;
+            this.audio.volume = volume;
+            this.updateVolumeDisplay();
+            
+            // Update both slider and input field to match
+            if (this.defaultVolumeSlider && this.defaultVolumeInput) {
+                const volumePercent = Math.round(volume * 100);
+                this.defaultVolumeSlider.value = volumePercent;
+                this.defaultVolumeInput.value = volumePercent;
+            }
+        }
+    }
+
     saveSettings() {
         const settings = {
             theme: this.currentTheme,
@@ -2389,4 +2479,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Version: v3.0.1
+// Version: v3.1.1
