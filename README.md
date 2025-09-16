@@ -3,7 +3,7 @@
 <div align="center">
 
 ![Liquid Glass Music Player](https://img.shields.io/badge/Status-Ready%20to%20Use-brightgreen)
-![Version](https://img.shields.io/badge/Version-3.0.0-blue)
+![Version](https://img.shields.io/badge/Version-3.0.1-blue)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 ![Browser Support](https://img.shields.io/badge/Browser%20Support-Modern%20Browsers-orange)
 
@@ -17,7 +17,7 @@
 
 ## 🌟 What Makes This Special?
 
-Experience music like never before with our **Liquid Glass Music Player v3.0.0** - a beautifully crafted web application that combines cutting-edge design with powerful functionality. Featuring mesmerizing glassmorphism effects, automatic album art display, intelligent metadata extraction, and an intuitive interface that makes managing your music collection a joy.
+Experience music like never before with our **Liquid Glass Music Player v3.0.1** - a beautifully crafted web application that combines cutting-edge design with powerful functionality. Featuring mesmerizing glassmorphism effects, automatic album art display, intelligent metadata extraction, and an intuitive interface that makes managing your music collection a joy.
 
 ### 🎨 Visual Excellence
 - **Liquid Glass Design**: Translucent cards with backdrop blur effects that create depth and elegance
@@ -65,9 +65,9 @@ Experience music like never before with our **Liquid Glass Music Player v3.0.0**
 ### 🎮 **Playback Controls**
 - **Full Player Controls**: Play, pause, skip, shuffle, and repeat modes
 - **Interactive Progress Bar**: Click or drag to seek through tracks
-- **Volume Control**: Smooth real-time volume adjustment
-- **Keyboard Shortcuts**: Space to play/pause, arrows to skip, M to mute
-- **Visual Feedback**: Loading states and smooth transitions
+- **Volume Control**: Smooth real-time volume adjustment with keyboard shortcuts
+- **Keyboard Shortcuts**: Complete control via keyboard (Space, arrows, M, S, R)
+- **Visual Feedback**: Loading states, smooth transitions, and volume notifications
 - **Track Information**: Displays title, artist, and album from metadata
 
 ### ⚙️ **Advanced Features**
@@ -158,7 +158,11 @@ When metadata tags are not available, the system intelligently parses filenames 
 | `Space` | Play/Pause |
 | `←` | Previous track |
 | `→` | Next track |
+| `↑` | Volume up (+5%) |
+| `↓` | Volume down (-5%) |
 | `M` | Mute/Unmute |
+| `S` | Toggle shuffle |
+| `R` | Cycle repeat modes |
 | `Esc` | Clear selection |
 
 ### 🎛️ **Player Functions**
@@ -217,6 +221,12 @@ When metadata tags are not available, the system intelligently parses filenames 
 10. **Python Server**: Always use the Python server for best experience
 11. **Memory Management**: The player automatically cleans up unused files
 12. **Error Handling**: Failed metadata extraction gracefully falls back to filename parsing
+
+### ⌨️ **Keyboard Mastery**
+13. **Volume Control**: Use ↑/↓ arrows for precise 5% volume adjustments
+14. **Quick Shuffle**: Press S to instantly toggle shuffle mode
+15. **Repeat Modes**: Press R to cycle through repeat options
+16. **Volume Feedback**: Volume changes show notifications in bottom left
 
 ---
 
@@ -297,6 +307,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 *Made with ❤️ for music lovers everywhere*
 
-**Version: v3.0.0**
+**Version: v3.0.1**
 
 </div>

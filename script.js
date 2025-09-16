@@ -122,9 +122,11 @@ class MusicPlayer {
         this.durationEl = document.getElementById('duration');
         
         // Volume elements
+        this.volumeContainer = document.querySelector('.volume-container');
         this.volumeBar = document.getElementById('volumeBar');
         this.volumeProgress = document.getElementById('volumeProgress');
         this.volumeHandle = document.getElementById('volumeHandle');
+        this.volumePercentageEl = document.getElementById('volumePercentage');
         
         // Track info elements
         this.trackTitle = document.getElementById('trackTitle');
@@ -1238,11 +1240,51 @@ class MusicPlayer {
         this.volumeHandle.style.left = `${this.volume * 100}%`;
         this.updateVolumeButton();
         
+        // Update volume percentage display
+        if (this.volumePercentageEl) {
+            this.volumePercentageEl.textContent = `${Math.round(this.volume * 100)}%`;
+        }
+        
         // Hide mute indicator if volume is not 0
         if (this.audio.volume > 0) {
             this.muteIndicator.style.display = 'none';
         }
     }
+
+    adjustVolume(delta) {
+        const oldVolume = this.volume;
+        this.volume = Math.max(0, Math.min(1, this.volume + delta));
+        this.audio.volume = this.volume;
+        this.updateVolumeDisplay();
+        
+        // Show visual feedback for volume change
+        this.showVolumeChangeFeedback(oldVolume, this.volume);
+        
+        // Hide mute indicator if volume is set to non-zero
+        if (this.volume > 0) {
+            this.muteIndicator.style.display = 'none';
+        }
+    }
+
+    showVolumeChangeFeedback(oldVolume, newVolume) {
+        const change = newVolume - oldVolume;
+        const currentVolume = Math.round(newVolume * 100);
+        
+        let message, icon;
+        if (change > 0) {
+            message = `Volume increased to ${currentVolume}%`;
+            icon = 'fa-volume-up';
+        } else if (change < 0) {
+            message = `Volume decreased to ${currentVolume}%`;
+            icon = 'fa-volume-down';
+        } else {
+            return; // No change, don't show notification
+        }
+        
+        // Show notification in bottom left
+        this.showNotification(message, icon);
+    }
+
 
     updateProgress() {
         if (this.audio.duration && !this.isDraggingProgress) {
@@ -1763,9 +1805,24 @@ class MusicPlayer {
         } else if (event.code === 'ArrowRight') {
             event.preventDefault();
             this.nextTrack();
+        } else if (event.code === 'ArrowUp') {
+            event.preventDefault();
+            this.adjustVolume(0.05); // +5%
+        } else if (event.code === 'ArrowDown') {
+            event.preventDefault();
+            this.adjustVolume(-0.05); // -5%
         } else if (event.code === 'KeyM') {
             event.preventDefault();
             this.toggleMute();
+        } else if (event.code === 'KeyS') {
+            event.preventDefault();
+            this.toggleShuffle();
+        } else if (event.code === 'KeyR') {
+            // Only prevent default if CTRL is not pressed (to allow CTRL+R for refresh)
+            if (!event.ctrlKey) {
+                event.preventDefault();
+                this.toggleRepeat();
+            }
         } else if (event.code === 'Escape') {
             // Clear selection on Escape
             this.clearSelection();
@@ -2332,4 +2389,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Version: v3.0.0
+// Version: v3.0.1
