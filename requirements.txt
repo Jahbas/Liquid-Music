@@ -10,3 +10,5 @@ Pillow>=9.0.0
 # Optional: For better audio format support
 # eyed3>=0.9.7  # Additional MP3 support
 # tinytag>=1.8.1  # Lightweight metadata reader
+
+# Version: v3.0.0

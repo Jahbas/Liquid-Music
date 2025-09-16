@@ -139,3 +139,7 @@ The metadata system is fully integrated with the existing music player:
 ---
 
 **Ready to use!** Just start the server with `python server.py` and upload your audio files. The metadata extraction will work automatically in the background! 🎉
+
+---
+
+**Version: v3.0.0**
