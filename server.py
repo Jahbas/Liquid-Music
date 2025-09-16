@@ -186,7 +186,13 @@ def main():
 
             icon = create_tray_icon(stop_server, open_browser)
             # Do not auto-open browser in minimized mode
-            icon.run()
+            try:
+                icon.run()
+            except Exception as e:
+                # If tray fails (e.g., missing GUI), fall back to normal open
+                print(f"Tray icon failed: {e}. Falling back to normal mode.")
+                open_browser()
+                server_thread.join()
         else:
             # Normal mode: open browser and block
             open_browser()

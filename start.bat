@@ -33,8 +33,12 @@ if exist install_dependencies.py (
     "%PYTHON%" install_dependencies.py >nul 2>&1
 )
 
+REM Prefer pythonw.exe if available to avoid any console host creation
+set "PYEXEC=%PYTHON%"
+for /f "delims=" %%P in ('where pythonw 2^>nul') do set "PYEXEC=pythonw"
+
 REM Launch server hidden (no console window)
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -WindowStyle Hidden -FilePath '%PYTHON%' -ArgumentList 'server.py','--minimized'"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -WindowStyle Hidden -FilePath '%PYEXEC%' -ArgumentList 'server.py','--minimized'"
 
 goto :EOF
 
