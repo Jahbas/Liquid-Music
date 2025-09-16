@@ -23,14 +23,26 @@ try:
     from mutagen.asf import ASF
     from PIL import Image
     PIL_AVAILABLE = True
+    MUTAGEN_AVAILABLE = True
 except ImportError as e:
     if "PIL" in str(e):
         PIL_AVAILABLE = False
         print("Warning: PIL/Pillow not found. Album art resizing will be disabled.")
         print("Install it with: pip install Pillow")
     else:
-        print("Error: mutagen library not found. Install it with: pip install mutagen")
-        sys.exit(1)
+        print("Warning: mutagen library not found. Metadata extraction will be disabled.")
+        print("Install it with: pip install mutagen")
+        # Set all mutagen imports to None to prevent errors
+        File = None
+        ID3NoHeaderError = None
+        APIC = None
+        MP3 = None
+        FLAC = None
+        Picture = None
+        MP4 = None
+        OggVorbis = None
+        ASF = None
+        MUTAGEN_AVAILABLE = False
 
 
 def extract_metadata(file_path):
@@ -43,6 +55,10 @@ def extract_metadata(file_path):
     Returns:
         dict: Extracted metadata or None if extraction fails
     """
+    # Check if mutagen is available
+    if not MUTAGEN_AVAILABLE:
+        return {"error": "mutagen library not available. Install with: pip install mutagen"}
+    
     try:
         if not os.path.exists(file_path):
             return {"error": f"File not found: {file_path}"}
