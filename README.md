@@ -10,6 +10,8 @@
 
 *A stunning, modern music player with liquid glass aesthetics, album art display, and intelligent metadata extraction*
 
+[<img alt="Download" src="https://img.shields.io/badge/Download-ZIP-blue?logo=github" />](https://github.com/Jahbas/Liquid-Music/archive/refs/heads/main.zip)
+
 [🚀 Quick Start](#-quick-start) • [✨ Features](#-features) • [🎮 Controls](#-controls) • [📊 Metadata System](#-metadata-system)
 
 </div>
@@ -82,7 +84,21 @@ Experience music like never before with **Liquid Glass Music Player v3.2.2.2** -
 
 ## 🚀 Quick Start
 
-### 🐍 **Option 1: Python Server (Recommended for Full Features)**
+### 🪟 One-Click on Windows (Recommended)
+1) Download the repository ZIP using the "Download" button above.
+2) Extract the ZIP anywhere (e.g., Desktop).
+3) Double‑click `start.bat`.
+
+`start.bat` will automatically:
+- Install or bootstrap pip if missing (ensurepip / get-pip fallback)
+- Install all dependencies (requirements + metadata deps)
+- Start the Python server
+
+Then open http://localhost:8000 in your browser.
+
+---
+
+### 🐍 **Option 1: Python Server (Manual)**
 ```bash
 # Clone or download the project
 cd Liquid-Music
