@@ -164,7 +164,7 @@ class MusicPlayer {
         this.glassEffects = document.getElementById('glassEffects');
         this.animatedBg = document.getElementById('animatedBg');
         this.themeButtons = document.querySelectorAll('.theme-btn');
-        this.currentTheme = 'glass';
+        this.currentTheme = 'dark';
         
         // Default volume elements
         this.defaultVolumeSlider = document.getElementById('defaultVolume');
@@ -2384,8 +2384,8 @@ class MusicPlayer {
                     document.body.setAttribute('data-theme', parsed.theme);
                 } else {
                     // Set default theme if none saved
-                    this.currentTheme = 'glass';
-                    document.body.setAttribute('data-theme', 'glass');
+                    this.currentTheme = 'dark';
+                    document.body.setAttribute('data-theme', 'dark');
                 }
                 
                 // Update active button
@@ -2415,11 +2415,11 @@ class MusicPlayer {
                 }
             } else {
                 // No settings saved, apply defaults
-                this.currentTheme = 'glass';
-                document.body.setAttribute('data-theme', 'glass');
+                this.currentTheme = 'dark';
+                document.body.setAttribute('data-theme', 'dark');
                 this.themeButtons.forEach(btn => {
                     btn.classList.remove('active');
-                    if (btn.dataset.theme === 'glass') {
+                    if (btn.dataset.theme === 'dark') {
                         btn.classList.add('active');
                     }
                 });
@@ -2427,11 +2427,11 @@ class MusicPlayer {
         } catch (error) {
             console.error('Error loading settings:', error);
             // Apply defaults on error
-            this.currentTheme = 'glass';
-            document.body.setAttribute('data-theme', 'glass');
+            this.currentTheme = 'dark';
+            document.body.setAttribute('data-theme', 'dark');
             this.themeButtons.forEach(btn => {
                 btn.classList.remove('active');
-                if (btn.dataset.theme === 'glass') {
+                if (btn.dataset.theme === 'dark') {
                     btn.classList.add('active');
                 }
             });
