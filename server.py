@@ -13,6 +13,7 @@ import json
 import tempfile
 import urllib.parse
 import urllib.request
+import re
 from pathlib import Path
 
 # Import our metadata reader
@@ -46,6 +47,8 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         """Extend GET to support a simple proxy for remote audio downloads."""
         parsed = urllib.parse.urlparse(self.path)
+        if parsed.path == '/version':
+            return self.handle_version_info()
         if parsed.path == '/proxy':
             return self.handle_proxy_request(parsed)
         if parsed.path == '/resolve-title':
@@ -203,6 +206,40 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(out)
         except Exception as e:
             self.send_error(502, f"Resolve error: {e}")
+
+    def handle_version_info(self):
+        """Return current version and attempt to fetch latest version (best-effort)."""
+        try:
+            # Keep current version aligned with this branch
+            current_version = "v3.2.2.2"
+
+            latest_version = None
+            try:
+                req = urllib.request.Request(
+                    'https://raw.githubusercontent.com/Jahbas/Liquid-Music/main/README.md',
+                    headers={'User-Agent': 'Liquid-Music-Updater'}
+                )
+                with urllib.request.urlopen(req, timeout=4) as resp:
+                    text = resp.read().decode('utf-8', errors='ignore')
+                    m = re.search(r"Version[\s:-]*v(\d+\.\d+\.\d+(?:\.\d+)?)", text, re.IGNORECASE)
+                    if m:
+                        latest_version = f"v{m.group(1)}"
+            except Exception:
+                latest_version = None
+
+            payload = {
+                'current': current_version,
+                'latest': latest_version,
+                'update_available': (latest_version is not None and latest_version != current_version)
+            }
+            out = json.dumps(payload).encode('utf-8')
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.send_header('Content-Length', str(len(out)))
+            self.end_headers()
+            self.wfile.write(out)
+        except Exception as e:
+            self.send_error(500, f"Error generating version info: {str(e)}")
 
 def main():
     PORT = 8000

@@ -93,6 +93,9 @@ class MusicPlayer {
         if (!document.body.getAttribute('data-theme')) {
             document.body.setAttribute('data-theme', 'glass');
         }
+
+        // On-load version check - show toast using bottom-left container
+        this.checkVersionOnLoad();
     }
 
     initializeElements() {
@@ -202,6 +205,25 @@ class MusicPlayer {
         this.confirmMessage = document.getElementById('confirmMessage');
         this.confirmCancel = document.getElementById('confirmCancel');
         this.confirmOk = document.getElementById('confirmOk');
+    }
+
+    async checkVersionOnLoad() {
+        try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 4000);
+            const res = await fetch('/version', { signal: controller.signal, cache: 'no-store' });
+            clearTimeout(timeout);
+            if (!res.ok) throw new Error('Network error');
+            const data = await res.json();
+            const current = data.current || 'unknown';
+            const latest = data.latest || null;
+            const update = !!data.update_available;
+            if (update) this.showNotification(`Update available: ${latest} (current ${current})`, 'fa-bell');
+            else this.showNotification(`You are up to date (${current})`, 'fa-check');
+        } catch (e) {
+            // Fail quietly; optional toast to inform user
+            this.showNotification('Version check failed', 'fa-exclamation-triangle');
+        }
     }
 
     bindEvents() {
