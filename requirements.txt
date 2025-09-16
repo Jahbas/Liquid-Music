@@ -11,4 +11,7 @@ Pillow>=9.0.0
 # eyed3>=0.9.7  # Additional MP3 support
 # tinytag>=1.8.1  # Lightweight metadata reader
 
+# System tray support for Windows minimized mode
+pystray>=0.19.5
+
 # Version: v3.2.2.2
