@@ -16,9 +16,7 @@ if /I not "%1"=="min" (
 )
 
 :MIN_MODE
-REM Minimized mode: use pythonw to hide console and pass --minimized to server
-set "PYTHONW=py -w"
-"%PYTHONW%" -V >nul 2>&1 || set "PYTHONW=pythonw"
+REM Minimized mode: launch Python hidden via PowerShell and pass --minimized
 
 REM Ensure pip and requirements as in normal mode (best effort, silent)
 set "PYTHON=py"
@@ -35,8 +33,8 @@ if exist install_dependencies.py (
     "%PYTHON%" install_dependencies.py >nul 2>&1
 )
 
-REM Launch server minimized to system tray
-start "Liquid Music" /min "%PYTHONW%" server.py --minimized
+REM Launch server hidden (no console window)
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -WindowStyle Hidden -FilePath '%PYTHON%' -ArgumentList 'server.py','--minimized'"
 
 goto :EOF
 
