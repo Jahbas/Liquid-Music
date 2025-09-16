@@ -142,4 +142,4 @@ The metadata system is fully integrated with the existing music player:
 
 ---
 
-**Version: v3.1.2**
+**Version: v3.2.1**

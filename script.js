@@ -171,6 +171,12 @@ class MusicPlayer {
         this.defaultVolumeInput = document.getElementById('defaultVolumeInput');
         this.setDefaultBtn = document.getElementById('setDefaultBtn');
 
+        // Artists UI elements
+        this.artistsToggle = document.getElementById('artistsToggle');
+        this.artistsModal = document.getElementById('artistsModal');
+        this.artistsClose = document.getElementById('artistsClose');
+        this.artistsList = document.getElementById('artistsList');
+
         // Logs UI elements
         this.logsToggle = document.getElementById('logsToggle');
         this.logsModal = document.getElementById('logsModal');
@@ -305,6 +311,13 @@ class MusicPlayer {
             if (e.target === this.settingsPanel) {
                 this.hideSettings();
             }
+        });
+
+        // Artists events
+        this.artistsToggle.addEventListener('click', () => this.showArtists());
+        this.artistsClose.addEventListener('click', () => this.hideArtists());
+        this.artistsModal.addEventListener('click', (e) => {
+            if (e.target === this.artistsModal) this.hideArtists();
         });
 
         // Logs events
@@ -1382,6 +1395,158 @@ class MusicPlayer {
 
     hideLogs() {
         this.logsModal.classList.remove('active');
+    }
+
+    showArtists() {
+        this.artistsModal.classList.add('active');
+        document.body.classList.add('modal-open');
+        this.updateArtistsList();
+    }
+
+    hideArtists() {
+        this.artistsModal.classList.remove('active');
+        document.body.classList.remove('modal-open');
+    }
+
+    updateArtistsList() {
+        const artists = this.getArtistsFromPlaylists();
+        this.renderArtistsList(artists);
+    }
+
+    getArtistsFromPlaylists() {
+        const artistMap = new Map();
+        
+        // Get artists from current playlist (queue)
+        this.playlist.forEach(track => {
+            if (track.artist && track.artist.trim()) {
+                const artist = track.artist.trim();
+                if (artistMap.has(artist)) {
+                    const artistData = artistMap.get(artist);
+                    artistData.count++;
+                    artistData.albums.add(track.album || 'Unknown Album');
+                    artistData.songs.push(track);
+                } else {
+                    artistMap.set(artist, { 
+                        name: artist, 
+                        count: 1,
+                        albums: new Set([track.album || 'Unknown Album']),
+                        songs: [track],
+                        firstLetter: artist.charAt(0).toUpperCase()
+                    });
+                }
+            }
+        });
+        
+        // Get artists from custom playlists
+        this.customPlaylists.forEach(playlist => {
+            playlist.tracks.forEach(track => {
+                if (track.artist && track.artist.trim()) {
+                    const artist = track.artist.trim();
+                    if (artistMap.has(artist)) {
+                        const artistData = artistMap.get(artist);
+                        artistData.count++;
+                        artistData.albums.add(track.album || 'Unknown Album');
+                        artistData.songs.push(track);
+                    } else {
+                        artistMap.set(artist, { 
+                            name: artist, 
+                            count: 1,
+                            albums: new Set([track.album || 'Unknown Album']),
+                            songs: [track],
+                            firstLetter: artist.charAt(0).toUpperCase()
+                        });
+                    }
+                }
+            });
+        });
+
+        // Convert to array and sort by name
+        return Array.from(artistMap.values()).map(artist => ({
+            ...artist,
+            albums: Array.from(artist.albums),
+            albumCount: artist.albums.size
+        })).sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    renderArtistsList(artists) {
+        this.artistsList.innerHTML = '';
+        
+        if (artists.length === 0) {
+            this.artistsList.innerHTML = `
+                <div class="artist-item" style="justify-content: center; cursor: default;">
+                    <div class="artist-info">
+                        <div class="artist-name">No artists found</div>
+                        <div class="artist-count">Upload some music to see artists</div>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        artists.forEach(artist => {
+            const artistItem = document.createElement('div');
+            artistItem.className = 'artist-item';
+            artistItem.innerHTML = `
+                <div class="artist-avatar">
+                    <span class="artist-initial">${artist.firstLetter}</span>
+                </div>
+                <div class="artist-info">
+                    <div class="artist-name">${artist.name}</div>
+                    <div class="artist-details">
+                        <span class="artist-count">${artist.count} song${artist.count !== 1 ? 's' : ''}</span>
+                        <span class="artist-separator">•</span>
+                        <span class="artist-albums">${artist.albumCount} album${artist.albumCount !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div class="artist-album-list">${artist.albums.slice(0, 2).join(', ')}${artist.albums.length > 2 ? '...' : ''}</div>
+                </div>
+                <div class="artist-action">
+                    <i class="fas fa-plus-circle"></i>
+                </div>
+            `;
+            
+            artistItem.addEventListener('click', () => this.createArtistPlaylist(artist.name));
+            this.artistsList.appendChild(artistItem);
+        });
+    }
+
+    createArtistPlaylist(artistName) {
+        // Get all songs by this artist
+        const artistSongs = [];
+        
+        // Check current playlist (queue)
+        this.playlist.forEach(track => {
+            if (track.artist && track.artist.trim() === artistName) {
+                artistSongs.push(track);
+            }
+        });
+        
+        // Check custom playlists
+        this.customPlaylists.forEach(playlist => {
+            playlist.tracks.forEach(track => {
+                if (track.artist && track.artist.trim() === artistName) {
+                    artistSongs.push(track);
+                }
+            });
+        });
+
+        if (artistSongs.length === 0) {
+            this.showNotification(`No songs found for ${artistName}`, 'fa-exclamation-triangle');
+            return;
+        }
+
+        // Create playlist with artist name
+        const playlistId = `artist_${artistName.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`;
+        const playlist = {
+            name: artistName,
+            tracks: artistSongs,
+            cover: null
+        };
+
+        this.customPlaylists.set(playlistId, playlist);
+        this.saveToStorage();
+        this.renderPlaylistTabs();
+        this.showNotification(`Created playlist "${artistName}" with ${artistSongs.length} songs`, 'fa-music');
+        this.hideArtists();
     }
 
 
@@ -2479,4 +2644,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Version: v3.1.2
+// Version: v3.2.1

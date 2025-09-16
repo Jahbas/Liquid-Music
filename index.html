@@ -249,6 +249,13 @@
         </a>
     </div>
 
+    <!-- Artists Button -->
+    <div class="artists-panel">
+        <button id="artistsToggle" class="artists-btn" title="Open Artists">
+            <i class="fas fa-user-circle"></i>
+        </button>
+    </div>
+
     <!-- Logs Button -->
     <div class="logs-panel">
         <button id="logsToggle" class="logs-btn" title="Open Action Logs">
@@ -334,6 +341,27 @@
     <script src="script.js"></script>
     <!-- Toast Container -->
     <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Artists Modal -->
+    <div class="modal-overlay" id="artistsModal">
+        <div class="modal glass-card">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-circle"></i> Artists</h3>
+                <button class="modal-close" id="artistsClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <div class="artists-toolbar">
+                    <span class="artists-hint">Click on an artist to create a playlist with all their songs.</span>
+                </div>
+                <div class="artists-list" id="artistsList">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Drag & Drop Overlay -->
     <div id="dropOverlay" class="drop-overlay" aria-hidden="true">
         <div class="drop-content glass-card">
@@ -367,4 +395,4 @@
     </div>
 </body>
 </html>
-<!-- Version: v3.1.2 -->
+<!-- Version: v3.2.1 -->

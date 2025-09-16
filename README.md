@@ -17,7 +17,7 @@
 
 ## 🌟 What Makes This Special?
 
-Experience music like never before with our **Liquid Glass Music Player v3.1.2** - a beautifully crafted web application that combines cutting-edge design with powerful functionality. Featuring mesmerizing glassmorphism effects, automatic album art display, intelligent metadata extraction, and an intuitive interface that makes managing your music collection a joy.
+Experience music like never before with our **Liquid Glass Music Player v3.2.1** - a beautifully crafted web application that combines cutting-edge design with powerful functionality. Featuring mesmerizing glassmorphism effects, automatic album art display, intelligent metadata extraction, and an intuitive interface that makes managing your music collection a joy.
 
 ### 🎨 Visual Excellence
 - **Liquid Glass Design**: Translucent cards with backdrop blur effects that create depth and elegance
@@ -307,6 +307,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 *Made with ❤️ for music lovers everywhere*
 
-**Version: v3.1.2**
+**Version: v3.2.1**
 
 </div>

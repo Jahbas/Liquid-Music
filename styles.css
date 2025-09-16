@@ -1440,11 +1440,34 @@ body[data-theme="glass"] .playlist-management {
     z-index: 1000;
 }
 
+.artists-panel {
+    position: fixed;
+    bottom: 20px;
+    right: 200px;
+    z-index: 1000;
+}
+
 .logs-panel {
     position: fixed;
     bottom: 20px;
     right: 140px;
     z-index: 1000;
+}
+
+.artists-btn {
+    width: 50px;
+    height: 50px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(180deg, rgba(255, 193, 7, 0.95), rgba(255, 193, 7, 0.8));
+    color: #ffffff;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 8px 25px rgba(255, 193, 7, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .logs-btn {
@@ -1463,11 +1486,142 @@ body[data-theme="glass"] .playlist-management {
     justify-content: center;
 }
 
+.artists-btn:hover {
+    transform: translateY(-3px) scale(1.1);
+    box-shadow: 0 15px 35px rgba(255, 193, 7, 0.5);
+}
+
 .logs-btn:hover {
     transform: translateY(-3px) scale(1.1);
     box-shadow: 0 15px 35px rgba(100, 149, 237, 0.5);
 }
 
+
+/* Artists modal list */
+.artists-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.artists-hint {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    font-style: italic;
+}
+
+.artists-list {
+    max-height: 400px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.artist-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.artist-item:hover {
+    background: rgba(255, 193, 7, 0.1);
+    border-color: rgba(255, 193, 7, 0.3);
+    transform: translateY(-1px);
+}
+
+.artist-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, rgba(255, 193, 7, 0.3), rgba(255, 193, 7, 0.1));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: rgba(255, 193, 7, 0.9);
+    border: 2px solid rgba(255, 193, 7, 0.3);
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.artist-initial {
+    font-size: 18px;
+    font-weight: 700;
+    color: rgba(255, 193, 7, 0.9);
+}
+
+.artist-info {
+    flex: 1;
+}
+
+.artist-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 2px;
+}
+
+.artist-details {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.artist-count {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+}
+
+.artist-separator {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.artist-albums {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+}
+
+.artist-album-list {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    font-style: italic;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.artist-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(255, 193, 7, 0.1);
+    color: rgba(255, 193, 7, 0.8);
+    font-size: 14px;
+    transition: all 0.3s ease;
+    opacity: 0;
+}
+
+.artist-item:hover .artist-action {
+    opacity: 1;
+    background: rgba(255, 193, 7, 0.2);
+    transform: scale(1.1);
+}
 
 /* Logs modal list */
 .logs-toolbar {
@@ -2118,6 +2272,7 @@ body[data-theme="dark"] .btn-primary:hover {
 }
 
 body[data-theme="dark"] .settings-toggle,
+body[data-theme="dark"] .artists-btn,
 body[data-theme="dark"] .logs-btn,
 body[data-theme="dark"] .discord-btn {
     background: linear-gradient(180deg, rgba(60, 60, 60, 0.95), rgba(60, 60, 60, 0.8));
@@ -2125,6 +2280,7 @@ body[data-theme="dark"] .discord-btn {
 }
 
 body[data-theme="dark"] .settings-toggle:hover,
+body[data-theme="dark"] .artists-btn:hover,
 body[data-theme="dark"] .logs-btn:hover,
 body[data-theme="dark"] .discord-btn:hover {
     box-shadow: 0 15px 35px rgba(60, 60, 60, 0.3);
@@ -2187,6 +2343,51 @@ body[data-theme="dark"] .volume-input:hover {
 
 body[data-theme="dark"] .volume-percent {
     color: rgba(180, 180, 180, 0.8) !important;
+}
+
+body[data-theme="dark"] .artist-item {
+    background: rgba(60, 60, 60, 0.2) !important;
+    border: 1px solid rgba(100, 100, 100, 0.2) !important;
+}
+
+body[data-theme="dark"] .artist-item:hover {
+    background: rgba(100, 100, 100, 0.3) !important;
+    border-color: rgba(100, 100, 100, 0.4) !important;
+}
+
+body[data-theme="dark"] .artist-avatar {
+    background: linear-gradient(45deg, rgba(100, 100, 100, 0.3), rgba(100, 100, 100, 0.1)) !important;
+    color: rgba(200, 200, 200, 0.8) !important;
+    border: 2px solid rgba(100, 100, 100, 0.3) !important;
+}
+
+body[data-theme="dark"] .artist-initial {
+    color: rgba(200, 200, 200, 0.8) !important;
+}
+
+body[data-theme="dark"] .artist-name {
+    color: rgba(220, 220, 220, 0.9) !important;
+}
+
+body[data-theme="dark"] .artist-count {
+    color: rgba(180, 180, 180, 0.7) !important;
+}
+
+body[data-theme="dark"] .artist-albums {
+    color: rgba(180, 180, 180, 0.7) !important;
+}
+
+body[data-theme="dark"] .artist-album-list {
+    color: rgba(160, 160, 160, 0.5) !important;
+}
+
+body[data-theme="dark"] .artist-action {
+    background: rgba(100, 100, 100, 0.1) !important;
+    color: rgba(200, 200, 200, 0.8) !important;
+}
+
+body[data-theme="dark"] .artist-item:hover .artist-action {
+    background: rgba(100, 100, 100, 0.2) !important;
 }
 
 
@@ -3071,4 +3272,4 @@ body[data-theme="dark"] .cover-preview:hover img {
     box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
 }
 
-/* Version: v3.1.2 */
+/* Version: v3.2.1 */
