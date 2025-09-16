@@ -211,7 +211,7 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         """Return current version and attempt to fetch latest version (best-effort)."""
         try:
             # Keep current version aligned with this branch
-            current_version = "v3.2.2.2"
+            current_version = "v3.3.1"
 
             latest_version = None
             try:
@@ -281,4 +281,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-# Version: v3.2.2.2
+# Version: v3.3.1

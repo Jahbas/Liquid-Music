@@ -218,14 +218,14 @@ class MusicPlayer {
             const current = data.current || 'unknown';
             const latest = data.latest || null;
             const update = !!data.update_available;
-            if (update) this.showNotification(`Update available: ${latest} (current ${current})`, 'fa-bell');
-            else this.showNotification(`You are up to date (${current})`, 'fa-check');
+            if (update) this.showVersionBanner(`Update available: ${latest} (current ${current})`, 'fa-bell', true);
+            else this.showVersionBanner(`You are up to date (${current})`, 'fa-check');
         } catch (e) {
             // If not served over HTTP(S) (e.g., opened index.html directly), skip noisy error
             const proto = (window && window.location && window.location.protocol) || '';
             const isHttp = proto === 'http:' || proto === 'https:';
             if (isHttp) {
-                this.showNotification('Version check failed', 'fa-exclamation-triangle');
+                this.showVersionBanner('Version check failed', 'fa-exclamation-triangle', true);
             }
         }
     }
@@ -1465,6 +1465,33 @@ class MusicPlayer {
             };
             toast.querySelector('.close').addEventListener('click', remove);
             setTimeout(remove, 2800);
+        } catch (_) {}
+    }
+
+    showVersionBanner(message, icon, isWarning = false) {
+        try {
+            const container = document.getElementById('toastTopRight');
+            if (!container) return;
+            
+            // Clear any existing version banner
+            const existing = container.querySelector('.version-banner');
+            if (existing) existing.remove();
+            
+            const toast = document.createElement('div');
+            toast.className = `toast glass-card version-banner ${isWarning ? 'warning' : ''}`;
+            toast.innerHTML = `
+                <span class="icon"><i class="fas ${icon}"></i></span>
+                <span class="message">${message}</span>
+                <button class="close" title="Dismiss">×</button>
+            `;
+            container.appendChild(toast);
+            
+            const remove = () => {
+                toast.style.animation = 'toast-out 180ms ease forwards';
+                setTimeout(() => toast.remove(), 200);
+            };
+            toast.querySelector('.close').addEventListener('click', remove);
+            // Don't auto-remove version banners - they stay until dismissed
         } catch (_) {}
     }
 
@@ -2939,4 +2966,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Version: v3.2.2.2
+// Version: v3.3.1

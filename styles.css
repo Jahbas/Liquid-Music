@@ -1803,6 +1803,13 @@ body.panels-collapsed .collapse-panel {
     pointer-events: none;
 }
 
+.toast-container-top-right {
+    bottom: auto;
+    left: auto;
+    top: 20px;
+    right: 20px;
+}
+
 /* Drag & Drop Overlay */
 .drop-overlay {
     position: fixed;
@@ -3431,7 +3438,7 @@ body[data-theme="dark"] .tooltip::before {
     border-bottom-color: rgba(30, 30, 30, 0.95);
 }
 
-/* Version: v3.2.2.2 */
+/* Version: v3.3.1 */
 
 /* Clock */
 .header-clock {
