@@ -65,3 +65,4 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+ #version 3.2.2
