@@ -221,8 +221,12 @@ class MusicPlayer {
             if (update) this.showNotification(`Update available: ${latest} (current ${current})`, 'fa-bell');
             else this.showNotification(`You are up to date (${current})`, 'fa-check');
         } catch (e) {
-            // Fail quietly; optional toast to inform user
-            this.showNotification('Version check failed', 'fa-exclamation-triangle');
+            // If not served over HTTP(S) (e.g., opened index.html directly), skip noisy error
+            const proto = (window && window.location && window.location.protocol) || '';
+            const isHttp = proto === 'http:' || proto === 'https:';
+            if (isHttp) {
+                this.showNotification('Version check failed', 'fa-exclamation-triangle');
+            }
         }
     }
 
