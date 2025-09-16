@@ -9,7 +9,18 @@ import socketserver
 import webbrowser
 import os
 import sys
+import json
+import tempfile
+import urllib.parse
 from pathlib import Path
+
+# Import our metadata reader
+try:
+    from metadata_reader import extract_metadata, parse_filename_metadata
+    METADATA_AVAILABLE = True
+except ImportError:
+    METADATA_AVAILABLE = False
+    print("Warning: metadata_reader.py not found. Metadata extraction will be disabled.")
 
 class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
@@ -23,6 +34,65 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         # Handle preflight requests
         self.send_response(200)
         self.end_headers()
+
+    def do_POST(self):
+        """Handle POST requests for metadata extraction."""
+        if self.path == '/extract-metadata':
+            self.handle_metadata_extraction()
+        else:
+            self.send_error(404, "Not Found")
+
+    def handle_metadata_extraction(self):
+        """Extract metadata from uploaded audio file."""
+        if not METADATA_AVAILABLE:
+            self.send_error(503, "Metadata extraction not available")
+            return
+
+        try:
+            # Get content length
+            content_length = int(self.headers.get('Content-Length', 0))
+            if content_length == 0:
+                self.send_error(400, "No file data received")
+                return
+
+            # Read file data
+            file_data = self.rfile.read(content_length)
+            
+            # Get filename from headers
+            filename = self.headers.get('X-Filename', 'unknown.mp3')
+            
+            # Create temporary file
+            with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(filename)[1]) as temp_file:
+                temp_file.write(file_data)
+                temp_file_path = temp_file.name
+
+            try:
+                # Extract metadata
+                metadata = extract_metadata(temp_file_path)
+                
+                # If extraction failed, try filename parsing
+                if 'error' in metadata:
+                    filename_metadata = parse_filename_metadata(filename)
+                    metadata = {**filename_metadata, "file_name": filename}
+                    metadata["extraction_method"] = "filename"
+                else:
+                    metadata["extraction_method"] = "tags"
+                
+                # Send response
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(metadata).encode('utf-8'))
+                
+            finally:
+                # Clean up temporary file
+                try:
+                    os.unlink(temp_file_path)
+                except:
+                    pass
+
+        except Exception as e:
+            self.send_error(500, f"Error processing file: {str(e)}")
 
 def main():
     PORT = 8000

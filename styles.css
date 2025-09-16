@@ -333,12 +333,50 @@ body.modal-open .player-overlay {
     width: 100%;
     height: 100%;
     background: linear-gradient(135deg, #667eea, #764ba2);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 60px;
     color: rgba(255, 255, 255, 0.8);
     position: relative;
+    z-index: 2;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.album-art.has-art {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.album-art.has-art::before {
+    display: none;
+}
+
+.album-art.has-art i.fa-music {
+    display: none !important;
+}
+
+.album-art:not(.has-art) {
+    animation: spin 3s linear infinite;
+}
+
+.album-art.has-art {
+    animation: none !important;
+}
+
+.album-art:not(.has-art)::before {
+    content: '♪';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 60px;
+    color: rgba(255, 255, 255, 0.8);
     z-index: 2;
 }
 
@@ -2553,21 +2591,29 @@ body[data-theme="glass"] .play-btn:hover {
 }
 
 /* Dark theme album art styling */
-body[data-theme="dark"] .album-art {
+body[data-theme="dark"] .album-art:not(.has-art) {
     background: linear-gradient(135deg, #2a2a2a, #1a1a1a) !important;
     color: rgba(200, 200, 200, 0.6) !important;
 }
 
+body[data-theme="dark"] .album-art.has-art {
+    /* Don't override background for album art - let the image show */
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    animation: none !important;
+}
+
 body[data-theme="dark"] .album-art img {
-    filter: brightness(0.7) contrast(1.1) saturate(0.8) !important;
+    filter: brightness(0.9) contrast(1.1) saturate(1.0) !important;
     transition: filter 0.3s ease;
 }
 
 body[data-theme="dark"] .album-art-container:hover .album-art img {
-    filter: brightness(0.8) contrast(1.2) saturate(0.9) !important;
+    filter: brightness(1.0) contrast(1.2) saturate(1.1) !important;
 }
 
-body[data-theme="dark"] .album-art-container:hover .album-art {
+body[data-theme="dark"] .album-art-container:hover .album-art:not(.has-art) {
     background: linear-gradient(135deg, #3a3a3a, #2a2a2a) !important;
     color: rgba(220, 220, 220, 0.7) !important;
 }

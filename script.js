@@ -418,9 +418,17 @@ class MusicPlayer {
 
     async handleFileUpload(event) {
         const files = Array.from(event.target.files);
+        
         for (const file of files) {
             if (file.type.startsWith('audio/')) {
-                await this.addTrackToPlaylist(file);
+                this.showNotification(`Processing ${file.name}...`, 'fa-spinner fa-spin');
+                try {
+                    await this.addTrackToPlaylist(file);
+                    this.showNotification(`Added ${file.name}`, 'fa-check-circle');
+                } catch (error) {
+                    console.error('Error adding track:', error);
+                    this.showNotification(`Failed to add ${file.name}`, 'fa-exclamation-triangle');
+                }
             }
         }
         
@@ -447,11 +455,52 @@ class MusicPlayer {
 
     async addTrackToPlaylist(file, addToTop = false) {
         const id = await this.db.saveFile(file);
+        
+        // Extract metadata from the file
+        let metadata = {
+            artist: 'Unknown Artist',
+            album: 'Unknown Album',
+            title: file.name.replace(/\.[^/.]+$/, ""),
+            year: null,
+            genre: null
+        };
+
+        // Try to extract metadata from filename first (fallback)
+        const filename = file.name.replace(/\.[^/.]+$/, "");
+        const filenameParts = filename.split(' - ');
+        if (filenameParts.length >= 2) {
+            metadata.artist = filenameParts[0].trim();
+            metadata.title = filenameParts[1].trim();
+        }
+
+        // Try to extract metadata using Python backend
+        try {
+            const extractedMetadata = await this.extractMetadataFromPython(file);
+            
+            if (extractedMetadata && Object.keys(extractedMetadata).length > 0) {
+                metadata.artist = extractedMetadata.artist || metadata.artist;
+                metadata.album = extractedMetadata.album || metadata.album;
+                metadata.title = extractedMetadata.title || metadata.title;
+                metadata.year = extractedMetadata.year || null;
+                metadata.genre = extractedMetadata.genre || null;
+                metadata.album_art = extractedMetadata.album_art || null;
+                metadata.album_art_mime = extractedMetadata.album_art_mime || null;
+            }
+        } catch (error) {
+            console.warn('Metadata extraction failed, using filename fallback:', error);
+        }
+        
         const track = {
             id: id,
-            name: file.name.replace(/\.[^/.]+$/, ""),
+            name: metadata.title,
+            artist: metadata.artist,
+            album: metadata.album,
+            year: metadata.year,
+            genre: metadata.genre,
             url: URL.createObjectURL(file), // immediate playback without waiting for IDB
-            duration: 0
+            duration: 0,
+            album_art: metadata.album_art,
+            album_art_mime: metadata.album_art_mime
         };
 
         if (addToTop) {
@@ -459,6 +508,7 @@ class MusicPlayer {
         } else {
             this.playlist.push(track);
         }
+        
         this.renderPlaylist();
         this.saveToStorage();
 
@@ -492,8 +542,8 @@ class MusicPlayer {
             <div class="playlist-item ${index === this.currentTrackIndex ? 'active' : ''} ${isSelected ? 'selected' : ''}" 
                  data-index="${index}">
                 <div class="playlist-item-info">
-                    <div class="playlist-item-title">${track.name}</div>
-                    <div class="playlist-item-artist">Unknown Artist</div>
+                    <div class="playlist-item-title">${track.name || 'Unknown Title'}</div>
+                    <div class="playlist-item-artist">${track.artist || 'Unknown Artist'}</div>
                 </div>
                 <div class="playlist-item-duration">${this.formatTime(track.duration)}</div>
                 <button class="playlist-item-remove" onclick="musicPlayer.removeTrack(${index})">
@@ -971,7 +1021,7 @@ class MusicPlayer {
         if (track.url) {
             this.audio.src = track.url;
         }
-        this.updateTrackInfo(track.name, 'Unknown Artist');
+        this.updateTrackInfo(track.name || 'Unknown Title', track.artist || 'Unknown Artist', track.album_art, track.album_art_mime);
         this.renderPlaylist();
         
         // Load metadata
@@ -1214,9 +1264,38 @@ class MusicPlayer {
         }
     }
 
-    updateTrackInfo(title, artist) {
+    updateTrackInfo(title, artist, albumArt = null, albumArtMime = null) {
         this.trackTitle.textContent = title;
         this.trackArtist.textContent = artist;
+        
+        // Update album art
+        const albumArtElement = document.querySelector('.album-art');
+        
+        if (albumArtElement) {
+            if (albumArt && albumArtMime) {
+                // Show album art
+                albumArtElement.style.backgroundImage = `url(data:${albumArtMime};base64,${albumArt})`;
+                albumArtElement.style.display = 'block';
+                albumArtElement.classList.add('has-art');
+                
+                // Hide the music icon when showing album art
+                const musicIcon = albumArtElement.querySelector('i.fa-music');
+                if (musicIcon) {
+                    musicIcon.style.display = 'none';
+                }
+            } else {
+                // Show spinning CD
+                albumArtElement.style.backgroundImage = '';
+                albumArtElement.style.display = 'block';
+                albumArtElement.classList.remove('has-art');
+                
+                // Show the music icon when no album art
+                const musicIcon = albumArtElement.querySelector('i.fa-music');
+                if (musicIcon) {
+                    musicIcon.style.display = 'block';
+                }
+            }
+        }
     }
 
     // Toast notifications
@@ -1618,7 +1697,18 @@ class MusicPlayer {
         if (!arr) return;
         const sorted = [...tracks].sort((a,b) => a.index - b.index);
         sorted.forEach(t => {
-            arr.splice(Math.min(t.index, arr.length), 0, { id: t.id, name: t.name, url: null, duration: 0 });
+            arr.splice(Math.min(t.index, arr.length), 0, { 
+                id: t.id, 
+                name: t.name, 
+                artist: t.artist,
+                album: t.album,
+                year: t.year,
+                genre: t.genre,
+                url: null, 
+                duration: 0,
+                album_art: t.album_art,
+                album_art_mime: t.album_art_mime
+            });
         });
         this.renderPlaylist();
         this.saveToStorage();
@@ -1937,7 +2027,17 @@ class MusicPlayer {
     // Storage Management
     saveToStorage() {
         // Persist only serializable metadata (exclude object URLs and File/Blob)
-        const sanitizeTracks = (tracks) => tracks.map(t => ({ id: t.id, name: t.name, duration: t.duration || 0 }));
+        const sanitizeTracks = (tracks) => tracks.map(t => ({ 
+            id: t.id, 
+            name: t.name, 
+            artist: t.artist,
+            album: t.album,
+            year: t.year,
+            genre: t.genre,
+            duration: t.duration || 0,
+            album_art: t.album_art,
+            album_art_mime: t.album_art_mime
+        }));
         const data = {
             playlist: sanitizeTracks(this.playlist),
             customPlaylists: Array.from(this.customPlaylists.entries()).map(([id, pl]) => [id, {
@@ -1959,7 +2059,18 @@ class MusicPlayer {
                 
                 if (parsed.playlist) {
                     // Rehydrate playlist and reconstruct URLs asynchronously
-                    this.playlist = parsed.playlist.map(t => ({ id: t.id, name: t.name, duration: t.duration || 0, url: null }));
+                    this.playlist = parsed.playlist.map(t => ({ 
+                        id: t.id, 
+                        name: t.name, 
+                        artist: t.artist,
+                        album: t.album,
+                        year: t.year,
+                        genre: t.genre,
+                        duration: t.duration || 0, 
+                        url: null,
+                        album_art: t.album_art,
+                        album_art_mime: t.album_art_mime
+                    }));
                     // Preload object URLs in background
                     Promise.all(this.playlist.map(async (t) => {
                         if (t.id) {
@@ -1980,7 +2091,18 @@ class MusicPlayer {
                     // Rehydrate custom playlists
                     const rebuilt = new Map();
                     parsed.customPlaylists.forEach(([id, pl]) => {
-                        const tracks = (pl.tracks || []).map(t => ({ id: t.id, name: t.name, duration: t.duration || 0, url: null }));
+                        const tracks = (pl.tracks || []).map(t => ({ 
+                            id: t.id, 
+                            name: t.name, 
+                            artist: t.artist,
+                            album: t.album,
+                            year: t.year,
+                            genre: t.genre,
+                            duration: t.duration || 0, 
+                            url: null,
+                            album_art: t.album_art,
+                            album_art_mime: t.album_art_mime
+                        }));
                         rebuilt.set(id, { name: pl.name, cover: pl.cover, tracks });
                     });
                     this.customPlaylists = rebuilt;
@@ -2105,11 +2227,55 @@ class MusicPlayer {
             return false;
         }
     }
+
+    // Extract metadata using Python backend
+    async extractMetadataFromPython(file) {
+        try {
+            // Send request to Python backend
+            const response = await fetch('/extract-metadata', {
+                method: 'POST',
+                headers: {
+                    'X-Filename': file.name
+                },
+                body: file  // Send the file directly as binary data
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const metadata = await response.json();
+            
+            // Check if extraction was successful
+            if (metadata.error) {
+                return null;
+            }
+            
+            // Return the extracted metadata
+            return {
+                title: metadata.title,
+                artist: metadata.artist,
+                album: metadata.album,
+                year: metadata.year,
+                genre: metadata.genre,
+                track_number: metadata.track_number,
+                duration: metadata.duration,
+                extraction_method: metadata.extraction_method,
+                album_art: metadata.album_art,
+                album_art_mime: metadata.album_art_mime
+            };
+            
+        } catch (error) {
+            console.error('Error calling Python metadata extractor:', error);
+            return null;
+        }
+    }
 }
 
 // Initialize the music player when the page loads
 let musicPlayer;
 document.addEventListener('DOMContentLoaded', async () => {
+    
     const db = new MusicDB();
     try {
         await db.open();
@@ -2122,8 +2288,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Add some visual effects
 document.addEventListener('DOMContentLoaded', () => {
-    // Add ripple effect to buttons
-    document.querySelectorAll('.control-btn, .upload-btn, .new-playlist-btn').forEach(button => {
+    // Add ripple effect to buttons (excluding upload buttons)
+    document.querySelectorAll('.control-btn, .new-playlist-btn').forEach(button => {
         button.addEventListener('click', function(e) {
             const ripple = document.createElement('span');
             const rect = this.getBoundingClientRect();
