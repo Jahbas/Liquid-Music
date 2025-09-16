@@ -3,7 +3,7 @@
 <div align="center">
 
 ![Liquid Glass Music Player](https://img.shields.io/badge/Status-Ready%20to%20Use-brightgreen)
-![Version](https://img.shields.io/badge/Version-3.3.1-blue)
+![Version](https://img.shields.io/badge/Version-3.3.2-blue)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 ![Browser Support](https://img.shields.io/badge/Browser%20Support-Modern%20Browsers-orange)
 ![Developer](https://img.shields.io/badge/Developer-Solo%20Developer-purple)
@@ -20,7 +20,7 @@
 
 ## 🌟 What Makes This Special?
 
-Experience music like never before with **Liquid Glass Music Player v3.3.1** - a beautifully crafted web application developed by a solo developer that combines cutting-edge design with powerful functionality. Featuring mesmerizing glassmorphism effects, automatic album art display, intelligent metadata extraction, and an intuitive interface that makes managing your music collection a joy.
+Experience music like never before with **Liquid Glass Music Player v3.3.2** - a beautifully crafted web application developed by a solo developer that combines cutting-edge design with powerful functionality. Featuring mesmerizing glassmorphism effects, automatic album art display, intelligent metadata extraction, and an intuitive interface that makes managing your music collection a joy.
 
 ### 🎨 Visual Excellence
 - **Liquid Glass Design**: Translucent cards with backdrop blur effects that create depth and elegance
@@ -324,6 +324,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 *Made with ❤️ by a solo developer for music lovers everywhere*
 
-**Version: v3.3.1**
+**Version: v3.3.2**
 
 </div>
