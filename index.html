@@ -210,6 +210,23 @@
                 
                 <div class="setting-group">
                     <label class="setting-label">
+                        <i class="fas fa-code-branch"></i>
+                        Version
+                    </label>
+                    <div class="setting-option" id="versionStatus" aria-live="polite">
+                        <div class="setting-info">
+                            <span class="setting-name">Checking version...</span>
+                            <span class="setting-desc">Ensuring you are up to date</span>
+                        </div>
+                        <button class="btn btn-secondary" id="checkUpdatesBtn" data-tooltip="Check for updates now">
+                            <i class="fas fa-sync"></i>
+                            Check Now
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <label class="setting-label">
                         <i class="fas fa-magic"></i>
                         Visual Effects
                     </label>
@@ -367,6 +384,8 @@
     <script src="script.js"></script>
     <!-- Toast Container -->
     <div id="toastContainer" class="toast-container"></div>
+    <!-- Top-Right Toast Container -->
+    <div id="toastTopRight" class="toast-container toast-container-top-right"></div>
 
     <!-- Artists Modal -->
     <div class="modal-overlay" id="artistsModal">
@@ -421,4 +440,4 @@
     </div>
 </body>
 </html>
-<!-- Version: v3.2.2.2 -->
+<!-- Version: v3.3.1 -->

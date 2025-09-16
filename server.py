@@ -42,6 +42,13 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         else:
             self.send_error(404, "Not Found")
 
+    def do_GET(self):
+        # Lightweight API endpoint for version info
+        if self.path.startswith('/version'):
+            return self.handle_version_info()
+        # Fallback to default static file serving
+        return super().do_GET()
+
     def handle_metadata_extraction(self):
         """Extract metadata from uploaded audio file."""
         if not METADATA_AVAILABLE:
@@ -94,6 +101,45 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             self.send_error(500, f"Error processing file: {str(e)}")
 
+    def handle_version_info(self):
+        """Return current version and attempt to fetch latest version (best-effort)."""
+        try:
+            current_version = "v3.3.1"
+
+            # Best-effort latest version fetch from GitHub; tolerate offline
+            latest_version = None
+            try:
+                import urllib.request
+                import ssl
+                ctx = ssl.create_default_context()
+                ctx.check_hostname = False
+                ctx.verify_mode = ssl.CERT_NONE
+                req = urllib.request.Request(
+                    'https://raw.githubusercontent.com/Jahbas/Liquid-Music/main/README.md',
+                    headers={'User-Agent': 'Liquid-Music-Updater'}
+                )
+                with urllib.request.urlopen(req, timeout=3, context=ctx) as resp:
+                    text = resp.read().decode('utf-8', errors='ignore')
+                    # Look for a semantic version marker like Version: vX.Y.Z or badge
+                    import re
+                    m = re.search(r"Version[\s:-]*v(\d+\.\d+\.\d+(?:\.\d+)?)", text, re.IGNORECASE)
+                    if m:
+                        latest_version = f"v{m.group(1)}"
+            except Exception:
+                latest_version = None
+
+            payload = {
+                'current': current_version,
+                'latest': latest_version,
+                'update_available': (latest_version is not None and latest_version != current_version)
+            }
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(payload).encode('utf-8'))
+        except Exception as e:
+            self.send_error(500, f"Error generating version info: {str(e)}")
+
 def main():
     PORT = 8000
     
@@ -134,4 +180,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-# Version: v3.2.2.2
+# Version: v3.3.1

@@ -93,6 +93,9 @@ class MusicPlayer {
         if (!document.body.getAttribute('data-theme')) {
             document.body.setAttribute('data-theme', 'glass');
         }
+
+        // Trigger version check on load to show top-right banner immediately
+        this.runVersionCheck(false);
     }
 
     initializeElements() {
@@ -166,6 +169,8 @@ class MusicPlayer {
         this.disableHover = document.getElementById('disableHover');
         this.themeButtons = document.querySelectorAll('.theme-btn');
         this.currentTheme = 'dark';
+        this.versionStatus = document.getElementById('versionStatus');
+        this.checkUpdatesBtn = document.getElementById('checkUpdatesBtn');
         
         // Default volume elements
         this.defaultVolumeSlider = document.getElementById('defaultVolume');
@@ -293,6 +298,9 @@ class MusicPlayer {
         this.glassEffects.addEventListener('change', () => this.toggleGlassEffects());
         this.animatedBg.addEventListener('change', () => this.toggleAnimatedBackground());
         this.disableHover.addEventListener('change', () => this.applyHoverEffectsSetting());
+        if (this.checkUpdatesBtn) {
+            this.checkUpdatesBtn.addEventListener('click', () => this.runVersionCheck(true));
+        }
         
         // Default volume events
         this.defaultVolumeSlider.addEventListener('input', () => this.updateDefaultVolumeFromSlider());
@@ -1396,6 +1404,37 @@ class MusicPlayer {
         } catch (_) {}
     }
 
+    // Persistent top-right banner (same toast style, manual close only)
+    showVersionBanner(message, icon = 'fa-info-circle', isWarning = false) {
+        try {
+            const container = document.getElementById('toastTopRight');
+            if (!container) return;
+
+            // Clear previous version banners (keep other toasts if any)
+            Array.from(container.querySelectorAll('.toast')).forEach(el => el.remove());
+
+            const toast = document.createElement('div');
+            toast.className = 'toast glass-card';
+            toast.style.pointerEvents = 'auto';
+            toast.innerHTML = `
+                <span class="icon"><i class="fas ${icon}"></i></span>
+                <span class="message">${message}</span>
+                <button class="close" title="Dismiss">×</button>
+            `;
+            if (isWarning) {
+                // subtle emphasis for updates
+                toast.style.borderColor = 'rgba(255, 193, 7, 0.45)';
+            }
+            container.appendChild(toast);
+            const remove = () => {
+                toast.style.animation = 'toast-out 180ms ease forwards';
+                setTimeout(() => toast.remove(), 200);
+            };
+            toast.querySelector('.close').addEventListener('click', remove);
+            // No auto-timeout; stays until closed
+        } catch (_) {}
+    }
+
     // Action Log: UI
     showLogs() {
         this.renderLogs();
@@ -2213,10 +2252,65 @@ class MusicPlayer {
     // Settings Management
     toggleSettings() {
         this.settingsContent.classList.toggle('active');
+        if (this.settingsContent.classList.contains('active')) {
+            this.runVersionCheck(false);
+        }
     }
 
     hideSettings() {
         this.settingsContent.classList.remove('active');
+    }
+
+    async runVersionCheck(force) {
+        try {
+            if (this.versionStatus) {
+                const nameEl = this.versionStatus.querySelector('.setting-name');
+                const descEl = this.versionStatus.querySelector('.setting-desc');
+                if (nameEl) nameEl.textContent = 'Checking version...';
+                if (descEl) descEl.textContent = 'Ensuring you are up to date';
+            }
+
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 4000);
+            const res = await fetch('/version', { signal: controller.signal, cache: 'no-store' });
+            clearTimeout(timeout);
+            if (!res.ok) throw new Error('Network error');
+            const data = await res.json();
+
+            const current = data.current || 'unknown';
+            const latest = data.latest || null;
+            const update = !!data.update_available;
+
+            if (this.versionStatus) {
+                const nameEl = this.versionStatus.querySelector('.setting-name');
+                const descEl = this.versionStatus.querySelector('.setting-desc');
+                if (update) {
+                    if (nameEl) nameEl.textContent = `Update available: ${latest}`;
+                    if (descEl) descEl.textContent = `You are on ${current}. Click Check Now to retry.`;
+                    this.versionStatus.classList.add('update-available');
+                    this.showVersionBanner(`Update available: ${latest} (current ${current})`, 'fa-bell', true);
+                } else {
+                    if (nameEl) nameEl.textContent = `You are up to date (${current})`;
+                    if (descEl) descEl.textContent = latest ? `Latest version: ${latest}` : 'Latest version could not be determined';
+                    this.versionStatus.classList.remove('update-available');
+                    this.showVersionBanner(`You are up to date (${current})`, 'fa-check', false);
+                }
+            }
+
+            if (force) {
+                if (update) this.showNotification(`Update available: ${latest}`, 'fa-bell');
+                else this.showNotification('You are up to date', 'fa-check');
+            }
+        } catch (_) {
+            if (this.versionStatus) {
+                const nameEl = this.versionStatus.querySelector('.setting-name');
+                const descEl = this.versionStatus.querySelector('.setting-desc');
+                if (nameEl) nameEl.textContent = 'Version check failed';
+                if (descEl) descEl.textContent = 'You might be offline. Try again later.';
+            }
+            this.showVersionBanner('Version check failed', 'fa-exclamation-triangle', true);
+            if (force) this.showNotification('Version check failed', 'fa-exclamation-triangle');
+        }
     }
 
     // Theme section removed
@@ -2792,4 +2886,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Version: v3.2.2.2
+// Version: v3.3.1
