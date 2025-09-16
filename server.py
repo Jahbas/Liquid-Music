@@ -12,6 +12,7 @@ import sys
 import json
 import tempfile
 import urllib.parse
+import urllib.request
 from pathlib import Path
 
 # Import our metadata reader
@@ -41,6 +42,15 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_metadata_extraction()
         else:
             self.send_error(404, "Not Found")
+
+    def do_GET(self):
+        """Extend GET to support a simple proxy for remote audio downloads."""
+        parsed = urllib.parse.urlparse(self.path)
+        if parsed.path == '/proxy':
+            return self.handle_proxy_request(parsed)
+        if parsed.path == '/resolve-title':
+            return self.handle_resolve_title(parsed)
+        return super().do_GET()
 
     def handle_metadata_extraction(self):
         """Extract metadata from uploaded audio file."""
@@ -93,6 +103,106 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
         except Exception as e:
             self.send_error(500, f"Error processing file: {str(e)}")
+
+    def handle_proxy_request(self, parsed_path):
+        """Proxy a remote URL to bypass CORS for client downloads (audio files)."""
+        try:
+            qs = urllib.parse.parse_qs(parsed_path.query)
+            target_list = qs.get('url', [])
+            if not target_list:
+                self.send_error(400, "Missing url parameter")
+                return
+
+            target_url = target_list[0]
+            # Basic validation: only http/https
+            t_parsed = urllib.parse.urlparse(target_url)
+            if t_parsed.scheme not in ('http', 'https'):
+                self.send_error(400, "Unsupported URL scheme")
+                return
+
+            req = urllib.request.Request(target_url, headers={
+                'User-Agent': 'LiquidMusicDownloader/1.0'
+            })
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                status = getattr(resp, 'status', 200)
+                content_type = resp.headers.get('Content-Type', 'application/octet-stream')
+                content_disp = resp.headers.get('Content-Disposition')
+                content_len = resp.headers.get('Content-Length')
+
+                self.send_response(status)
+                self.send_header('Content-Type', content_type)
+                if content_disp:
+                    self.send_header('Content-Disposition', content_disp)
+                if content_len:
+                    self.send_header('Content-Length', content_len)
+                # Avoid content-length if unknown; stream chunks
+                self.end_headers()
+
+                while True:
+                    chunk = resp.read(64 * 1024)
+                    if not chunk:
+                        break
+                    self.wfile.write(chunk)
+
+        except Exception as e:
+            self.send_error(502, f"Proxy error: {e}")
+
+    def handle_resolve_title(self, parsed_path):
+        """Fetch a public page and attempt to extract a human-readable title (e.g., from MEGA)."""
+        try:
+            qs = urllib.parse.parse_qs(parsed_path.query)
+            target_list = qs.get('url', [])
+            if not target_list:
+                self.send_error(400, "Missing url parameter")
+                return
+            target_url = target_list[0]
+            t_parsed = urllib.parse.urlparse(target_url)
+            if t_parsed.scheme not in ('http', 'https'):
+                self.send_error(400, "Unsupported URL scheme")
+                return
+
+            # Fetch HTML
+            req = urllib.request.Request(target_url, headers={
+                'User-Agent': 'LiquidMusicResolver/1.0',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+            })
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                charset = 'utf-8'
+                ctype = resp.headers.get('Content-Type') or ''
+                if 'charset=' in ctype:
+                    charset = ctype.split('charset=')[-1].split(';')[0].strip()
+                html = resp.read().decode(charset, errors='ignore')
+
+            import re, html as htmlmod
+            title = None
+            # Try OpenGraph title
+            m = re.search(r'<meta[^>]+property=["\']og:title["\'][^>]+content=["\'](.*?)["\']', html, re.IGNORECASE)
+            if m:
+                title = m.group(1)
+            # Fallback to <title>
+            if not title:
+                m2 = re.search(r'<title[^>]*>(.*?)</title>', html, re.IGNORECASE | re.DOTALL)
+                if m2:
+                    title = m2.group(1)
+            if title:
+                title = htmlmod.unescape(title).strip()
+                # Clean common MEGA suffix/prefix
+                title = re.sub(r'\s*-\s*MEGA.*$', '', title, flags=re.IGNORECASE)
+                title = re.sub(r'^MEGA\s*-\s*', '', title, flags=re.IGNORECASE)
+                # Strip common audio extensions if present
+                title = re.sub(r'\.(mp3|opus|wav|flac|m4a)$', '', title, flags=re.IGNORECASE)
+            else:
+                title = 'Unknown Title'
+
+            data = { 'title': title }
+            out = json.dumps(data).encode('utf-8')
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.send_header('Content-Length', str(len(out)))
+            self.end_headers()
+            self.wfile.write(out)
+        except Exception as e:
+            self.send_error(502, f"Resolve error: {e}")
 
 def main():
     PORT = 8000

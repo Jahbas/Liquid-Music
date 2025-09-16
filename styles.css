@@ -949,9 +949,9 @@ body[data-theme="glass"] .playlist-management {
     color: rgba(255, 255, 255, 0.5);
     font-weight: 500;
     flex-shrink: 0; /* Prevent duration from shrinking */
-    min-width: 50px; /* Ensure minimum width for duration */
+    min-width: 78px; /* Ensure minimum width for duration (wider for full times like 1:23:45) */
     text-align: right; /* Right-align duration text */
-    margin-right: -20px; /* Move duration 20px closer to the right edge */
+    margin-right: 0; /* Avoid clipping/cutoff */
 }
 
 .playlist-item-remove {
@@ -1055,6 +1055,23 @@ body[data-theme="glass"] .playlist-management {
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s ease;
+}
+
+/* Market UI */
+.market-modal .modal { max-width: 400px; }
+.market-songs {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.market-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 14px;
+}
+.market-row-action {
+    margin-left: auto;
 }
 
 .modal-overlay.active {

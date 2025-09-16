@@ -36,6 +36,10 @@
                     <i class="fas fa-folder-open"></i>
                     <span>Upload Folder</span>
                 </button>
+                <button class="upload-btn glass-card" id="marketToggle" data-tooltip="Show Market">
+                    <i class="fas fa-store"></i>
+                    <span>Show Market</span>
+                </button>
             </div>
         </header>
 
@@ -383,6 +387,49 @@
                 </div>
                 <div class="artists-list" id="artistsList">
                     <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Market Modal -->
+    <div class="modal-overlay" id="marketModal">
+        <div class="modal glass-card market-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-store"></i> Market</h3>
+                <button class="modal-close" id="marketClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <div class="market-songs">
+                    <div class="playlist-item market-row" role="listitem" data-mega-url="https://mega.nz/file/uYkACJKb#pEIknkrhhfVem_effNH8bfYHY2vk2p8watAnU4l_ius">
+                        <div class="playlist-item-info">
+                            <div class="playlist-item-title">Track 1</div>
+                            <div class="playlist-item-artist">External Source</div>
+                        </div>
+                        <div class="market-row-action">
+                            <button class="btn btn-primary market-add-btn" aria-label="Add to current queue"><i class="fas fa-plus"></i></button>
+                        </div>
+                    </div>
+                    <div class="playlist-item market-row" role="listitem" data-mega-url="https://mega.nz/file/eUtmFbYa#dDnv_uBxFI95RmqrSUauOPDbX2XP-6jnVBc2mqLbids">
+                        <div class="playlist-item-info">
+                            <div class="playlist-item-title">Track 2</div>
+                            <div class="playlist-item-artist">External Source</div>
+                        </div>
+                        <div class="market-row-action">
+                            <button class="btn btn-primary market-add-btn" aria-label="Add to current queue"><i class="fas fa-plus"></i></button>
+                        </div>
+                    </div>
+                    <div class="playlist-item market-row" role="listitem" data-mega-url="https://mega.nz/file/zdVQyDbK#eilqiuWvObtTtVgLNK5RQEHmuqYjtfWvOg65DkuuuxY">
+                        <div class="playlist-item-info">
+                            <div class="playlist-item-title">Track 3</div>
+                            <div class="playlist-item-artist">External Source</div>
+                        </div>
+                        <div class="market-row-action">
+                            <button class="btn btn-primary market-add-btn" aria-label="Add to current queue"><i class="fas fa-plus"></i></button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

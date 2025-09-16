@@ -179,6 +179,11 @@ class MusicPlayer {
         this.artistsList = document.getElementById('artistsList');
         this.collapseToggle = document.getElementById('collapseToggle');
 
+        // Market UI elements
+        this.marketToggle = document.getElementById('marketToggle');
+        this.marketModal = document.getElementById('marketModal');
+        this.marketClose = document.getElementById('marketClose');
+
         // Logs UI elements
         this.logsToggle = document.getElementById('logsToggle');
         this.logsModal = document.getElementById('logsModal');
@@ -333,6 +338,47 @@ class MusicPlayer {
             if (e.target === this.logsModal) this.hideLogs();
         });
         this.logsClear.addEventListener('click', () => this.showClearLogsConfirm());
+
+        // Market events
+        if (this.marketToggle) this.marketToggle.addEventListener('click', () => this.showMarket());
+        if (this.marketClose) this.marketClose.addEventListener('click', () => this.hideMarket());
+        if (this.marketModal) this.marketModal.addEventListener('click', (e) => {
+            if (e.target === this.marketModal) this.hideMarket();
+        });
+        // Market bulk add buttons
+        document.querySelectorAll('.market-add-btn').forEach((btn, idx) => {
+            btn.addEventListener('click', async () => {
+                const row = btn.closest('.market-row');
+                const idxTitle = `Track ${idx + 1}`;
+                const defaultArtist = 'External Source';
+                let title = idxTitle;
+
+                // Try to resolve from MEGA link if present via data-url on sibling or a mapping
+                // We’ll keep a simple map in DOM using data-url on the row if needed in future
+                const urlEl = row ? row.querySelector('[data-mega-url]') : null;
+                const megaUrl = urlEl ? urlEl.getAttribute('data-mega-url') : null;
+                if (megaUrl) {
+                    try {
+                        const res = await fetch(`/resolve-title?url=${encodeURIComponent(megaUrl)}`);
+                        if (res.ok) {
+                            const data = await res.json();
+                            if (data && data.title) title = String(data.title).trim();
+                        }
+                    } catch (_) {}
+                } else {
+                    // Fallback to visible text
+                    const titleEl = row ? row.querySelector('.playlist-item-title') : null;
+                    const rawTitle = titleEl ? titleEl.textContent.trim() : idxTitle;
+                    title = rawTitle.replace(/\.(mp3|opus|wav|flac|m4a)$/i, '');
+                }
+
+                const artistEl = row ? row.querySelector('.playlist-item-artist') : null;
+                const artist = artistEl ? artistEl.textContent.trim() : defaultArtist;
+                this.addExternalTrackFromMarket({ title, artist });
+            });
+        });
+
+        // Removed preview buttons; market only adds to current queue now
 
 
         // Discord confirmation
@@ -1415,6 +1461,81 @@ class MusicPlayer {
     hideArtists() {
         this.artistsModal.classList.remove('active');
         document.body.classList.remove('modal-open');
+    }
+
+    // Market modal
+    showMarket() {
+        if (!this.marketModal) return;
+        this.marketModal.classList.add('active');
+        document.body.classList.add('modal-open');
+    }
+
+    hideMarket() {
+        if (!this.marketModal) return;
+        this.marketModal.classList.remove('active');
+        document.body.classList.remove('modal-open');
+    }
+
+    async downloadMarketTrack() {
+        try {
+            // NOTE: Mega embeds don't expose direct file URLs. If you have a direct mp3/ogg URL, replace below.
+            // For this example, we assume a direct downloadable URL is provided or proxied.
+            // Replace with your track's direct URL. Using a reliable sample MP3 for now.
+            const directUrl = 'https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3';
+            const proxied = `/proxy?url=${encodeURIComponent(directUrl)}`;
+            this.showNotification('Downloading track...', 'fa-download');
+
+            const res = await fetch(proxied, { method: 'GET' });
+            if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+            const blob = await res.blob();
+
+            // Construct a File from the blob so metadata/filename handling stays consistent
+            const filename = 'Market Track.mp3';
+            const file = new File([blob], filename, { type: blob.type || 'audio/mpeg' });
+
+            // Add to top of queue and play immediately
+            await this.addTrackToPlaylist(file, true);
+            // Ensure index 0 is the newly added track
+            if (this.getCurrentPlaylist().length > 0) {
+                await this.loadTrack(0);
+                await this.play();
+            }
+
+            this.showNotification('Added to queue and playing', 'fa-check-circle');
+            this.hideMarket();
+        } catch (err) {
+            console.error(err);
+            this.showNotification(`Failed to download track: ${err?.message || 'Unknown error'}`, 'fa-triangle-exclamation');
+        }
+    }
+
+    async addExternalTrackFromMarket(opts) {
+        try {
+            const title = (opts && opts.title) ? opts.title : 'Market Track';
+            const artist = (opts && opts.artist) ? opts.artist : 'External Source';
+            const filename = `${title}.mp3`;
+            const emptyBlob = new Blob([new Uint8Array([0])], { type: 'audio/mpeg' });
+            const file = new File([emptyBlob], filename, { type: 'audio/mpeg' });
+
+            // Add to top of queue but do not auto-play
+            await this.addTrackToPlaylist(file, true);
+
+            // Update labels and mark as external preview
+            const list = this.getCurrentPlaylist();
+            if (Array.isArray(list) && list.length > 0) {
+                const track = list[0];
+                track.name = title;
+                track.artist = artist;
+                track.external = true;
+                this.renderPlaylist();
+                this.saveToStorage();
+            }
+            this.showNotification('Added to queue from Market', 'fa-check-circle');
+            this.hideMarket();
+        } catch (err) {
+            console.error(err);
+            this.showNotification('Failed to add to queue', 'fa-triangle-exclamation');
+        }
     }
 
     toggleBottomPanels() {
