@@ -4,43 +4,66 @@ setlocal enableextensions
 REM Change to the directory of this script
 cd /d "%~dp0"
 
-REM Relaunch hidden to system tray unless already in minimized mode
-if /I not "%1"=="min" (
-    set "ME=%~f0"
-    set "VBS=%TEMP%\lm_start_hidden.vbs"
-    >"%VBS%" echo Set WshShell = CreateObject("WScript.Shell")
-    >>"%VBS%" echo WshShell.Run """%ME%"" min", 0
-    cscript //nologo "%VBS%" >nul 2>&1
-    del /q "%VBS%" >nul 2>&1
-    exit /b
-)
+echo.
+echo ==============================================
+echo   Liquid Music - Startup
+echo   Installing dependencies and starting server
+echo ==============================================
+echo.
 
-:MIN_MODE
-REM Minimized mode: launch Python hidden via PowerShell and pass --minimized
-
-REM Ensure pip and requirements as in normal mode (best effort, silent)
+REM Detect Python launcher or python.exe
 set "PYTHON=py"
 "%PYTHON%" -V >nul 2>&1 || set "PYTHON=python"
-"%PYTHON%" -m pip --version >nul 2>&1 || "%PYTHON%" -m ensurepip --upgrade >nul 2>&1
-"%PYTHON%" -m pip --version >nul 2>&1 || (
+
+echo Using Python interpreter: %PYTHON%
+
+REM Ensure pip is available; try pip, then ensurepip, then get-pip.py as fallback
+"%PYTHON%" -m pip --version >nul 2>&1
+if errorlevel 1 (
+    echo pip not found. Attempting to bootstrap with ensurepip...
+    "%PYTHON%" -m ensurepip --upgrade >nul 2>&1
+)
+
+"%PYTHON%" -m pip --version >nul 2>&1
+if errorlevel 1 (
+    echo ensurepip did not succeed. Downloading get-pip.py as fallback...
     set "GETPIP=%TEMP%\get-pip.py"
-    powershell -NoProfile -ExecutionPolicy Bypass -Command "try { Invoke-WebRequest -UseBasicParsing -Uri 'https://bootstrap.pypa.io/get-pip.py' -OutFile $env:TEMP+'\\get-pip.py' } catch { $_; exit 1 }" >nul 2>&1 && "%PYTHON%" "%GETPIP%" >nul 2>&1 && del /q "%GETPIP%" >nul 2>&1
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "try { Invoke-WebRequest -UseBasicParsing -Uri 'https://bootstrap.pypa.io/get-pip.py' -OutFile $env:TEMP+'\\get-pip.py' } catch { $_; exit 1 }" || (
+        echo Failed to download get-pip.py. Please install pip manually.
+        goto :AFTER_SERVER
+    )
+    "%PYTHON%" "%GETPIP%"
+    del /q "%GETPIP%" >nul 2>&1
 )
+
+REM Upgrade pip (best effort once available)
+"%PYTHON%" -m pip install --upgrade pip
+
+REM Install project requirements
 if exist requirements.txt (
-    "%PYTHON%" -m pip install -r requirements.txt >nul 2>&1
+    echo Installing requirements from requirements.txt ...
+    "%PYTHON%" -m pip install -r requirements.txt
+) else (
+    echo requirements.txt not found, skipping requirements installation.
 )
+
+REM Run metadata dependencies installer (if present)
 if exist install_dependencies.py (
-    "%PYTHON%" install_dependencies.py >nul 2>&1
+    echo Running install_dependencies.py to ensure metadata reader deps are installed ...
+    "%PYTHON%" install_dependencies.py
+) else (
+    echo install_dependencies.py not found, skipping metadata dependency installer.
 )
 
-REM Prefer pythonw.exe if available to avoid any console host creation
-set "PYEXEC=%PYTHON%"
-for /f "delims=" %%P in ('where pythonw 2^>nul') do set "PYEXEC=pythonw"
+echo.
+echo Starting development server (server.py)...
+echo.
+"%PYTHON%" server.py
 
-REM Launch server hidden (no console window)
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -WindowStyle Hidden -FilePath '%PYEXEC%' -ArgumentList 'server.py','--minimized'"
-
-goto :EOF
+REM If server exits, keep window open so messages are visible when double-clicked
+echo.
+echo Server exited. Press any key to close this window.
+pause >nul
 
 :AFTER_SERVER
 

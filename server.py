@@ -13,16 +13,6 @@ import json
 import tempfile
 import urllib.parse
 from pathlib import Path
-import threading
-import socket
-
-try:
-    # Lazy import when minimized mode is used
-    import pystray  # type: ignore
-    from PIL import Image, ImageDraw  # type: ignore
-    PYSTRAY_AVAILABLE = True
-except Exception:
-    PYSTRAY_AVAILABLE = False
 
 # Import our metadata reader
 try:
@@ -104,37 +94,8 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             self.send_error(500, f"Error processing file: {str(e)}")
 
-def find_available_port(start_port: int = 8000, max_tries: int = 50) -> int:
-    """Find an available TCP port starting from start_port."""
-    for offset in range(max_tries):
-        port = start_port + offset
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            s.bind(("", port))
-            s.close()
-            return port
-        except OSError:
-            s.close()
-            continue
-    return start_port
-
-
-def create_tray_icon(stop_callback, open_callback):
-    # Create a simple circle icon
-    size = 64
-    image = Image.new('RGBA', (size, size), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(image)
-    draw.ellipse((8, 8, size - 8, size - 8), fill=(33, 150, 243, 255))
-
-    menu = pystray.Menu(
-        pystray.MenuItem('Open in browser', lambda: open_callback()),
-        pystray.MenuItem('Quit', lambda: stop_callback())
-    )
-    return pystray.Icon('LiquidMusic', image, 'Liquid Music Server', menu)
-
-
 def main():
-    PORT = find_available_port(8000)
+    PORT = 8000
     
     # Change to the directory containing this script
     script_dir = Path(__file__).parent
@@ -148,11 +109,8 @@ def main():
         print(f"Error: Missing required files: {', '.join(missing_files)}")
         sys.exit(1)
     
-    # Create server with address reuse
-    class ReusableTCPServer(socketserver.TCPServer):
-        allow_reuse_address = True
-
-    with ReusableTCPServer(("", PORT), CustomHTTPRequestHandler) as httpd:
+    # Create server
+    with socketserver.TCPServer(("", PORT), CustomHTTPRequestHandler) as httpd:
         print(f"🎵 Liquid Glass Music Player Server")
         print(f"📡 Server running at http://localhost:{PORT}")
         print(f"🌐 Opening browser...")
@@ -160,46 +118,17 @@ def main():
         print(f"⏹️  Press Ctrl+C to stop the server")
         print("-" * 50)
         
-        minimized = '--minimized' in sys.argv or '-m' in sys.argv
-
-        def open_browser():
-            try:
-                webbrowser.open(f'http://localhost:{PORT}')
-            except Exception as e:
-                print(f"Could not open browser automatically: {e}")
-                print(f"Please manually open http://localhost:{PORT}")
-
-        def serve():
-            try:
-                httpd.serve_forever()
-            except KeyboardInterrupt:
-                pass
-
-        server_thread = threading.Thread(target=serve, daemon=True)
-        server_thread.start()
-
-        if minimized and PYSTRAY_AVAILABLE and os.name == 'nt':
-            # System tray mode
-            def stop_server():
-                httpd.shutdown()
-                icon.stop()
-
-            icon = create_tray_icon(stop_server, open_browser)
-            # Do not auto-open browser in minimized mode
-            try:
-                icon.run()
-            except Exception as e:
-                # If tray fails (e.g., missing GUI), fall back to normal open
-                print(f"Tray icon failed: {e}. Falling back to normal mode.")
-                open_browser()
-                server_thread.join()
-        else:
-            # Normal mode: open browser and block
-            open_browser()
-            try:
-                server_thread.join()
-            except KeyboardInterrupt:
-                pass
+        # Open browser
+        try:
+            webbrowser.open(f'http://localhost:{PORT}')
+        except Exception as e:
+            print(f"Could not open browser automatically: {e}")
+            print(f"Please manually open http://localhost:{PORT}")
+        
+        try:
+            httpd.serve_forever()
+        except KeyboardInterrupt:
+            print("\n🛑 Server stopped by user")
             httpd.shutdown()
 
 if __name__ == "__main__":
