@@ -3421,7 +3421,7 @@ body[data-theme="dark"] .tooltip::before {
     border-bottom-color: rgba(30, 30, 30, 0.95);
 }
 
-/* Version: v3.3.2 */
+/* Version: v4.1.1 */
 
 /* Clock */
 .header-clock {
@@ -3758,4 +3758,21 @@ body.panels-collapsed .settings-panel {
     visibility: hidden;
     transform: translateY(30px) scale(0.9);
     transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.15s;
+}
+
+/* Version check button styling */
+#checkUpdatesBtn {
+    width: 100%;
+    margin-left: 0;
+}
+
+/* Disable text selection for playlist items */
+.playlist-item-title,
+.playlist-item-artist {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
 }

@@ -1017,6 +1017,7 @@ class MusicPlayer {
         
         this.showConfirmDialog(confirmMessage, () => {
             // User confirmed - proceed with clearing
+            this.hideConfirmDialog();
             this.performClearPlaylist();
         });
     }
@@ -2219,6 +2220,7 @@ class MusicPlayer {
         
         this.showConfirmDialog(confirmMessage, () => {
             // User confirmed - proceed with deletion
+            this.hideConfirmDialog();
             this.performDeletePlaylist(playlistId);
         });
     }
@@ -2263,13 +2265,6 @@ class MusicPlayer {
 
     async runVersionCheck(force) {
         try {
-            if (this.versionStatus) {
-                const nameEl = this.versionStatus.querySelector('.setting-name');
-                const descEl = this.versionStatus.querySelector('.setting-desc');
-                if (nameEl) nameEl.textContent = 'Checking version...';
-                if (descEl) descEl.textContent = 'Ensuring you are up to date';
-            }
-
             const controller = new AbortController();
             const timeout = setTimeout(() => controller.abort(), 4000);
             const res = await fetch('/version', { signal: controller.signal, cache: 'no-store' });
@@ -2281,20 +2276,10 @@ class MusicPlayer {
             const latest = data.latest || null;
             const update = !!data.update_available;
 
-            if (this.versionStatus) {
-                const nameEl = this.versionStatus.querySelector('.setting-name');
-                const descEl = this.versionStatus.querySelector('.setting-desc');
-                if (update) {
-                    if (nameEl) nameEl.textContent = `Update available: ${latest}`;
-                    if (descEl) descEl.textContent = `You are on ${current}. Click Check Now to retry.`;
-                    this.versionStatus.classList.add('update-available');
-                    this.showVersionBanner(`Update available: ${latest} (current ${current})`, 'fa-bell', true);
-                } else {
-                    if (nameEl) nameEl.textContent = `You are up to date (${current})`;
-                    if (descEl) descEl.textContent = latest ? `Latest version: ${latest}` : 'Latest version could not be determined';
-                    this.versionStatus.classList.remove('update-available');
-                    this.showVersionBanner(`You are up to date (${current})`, 'fa-check', false);
-                }
+            if (update) {
+                this.showVersionBanner(`Update available: ${latest} (current ${current})`, 'fa-bell', true);
+            } else {
+                this.showVersionBanner(`Version ${current}`, 'fa-check', false);
             }
 
             if (force) {
@@ -2302,12 +2287,6 @@ class MusicPlayer {
                 else this.showNotification('You are up to date', 'fa-check');
             }
         } catch (_) {
-            if (this.versionStatus) {
-                const nameEl = this.versionStatus.querySelector('.setting-name');
-                const descEl = this.versionStatus.querySelector('.setting-desc');
-                if (nameEl) nameEl.textContent = 'Version check failed';
-                if (descEl) descEl.textContent = 'You might be offline. Try again later.';
-            }
             this.showVersionBanner('Version check failed', 'fa-exclamation-triangle', true);
             if (force) this.showNotification('Version check failed', 'fa-exclamation-triangle');
         }
@@ -2886,4 +2865,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Version: v3.3.2
+// Version: v4.1.1
