@@ -1,4 +1,6 @@
 // Simple IndexedDB wrapper for storing audio blobs persistently
+console.log('Script.js loaded successfully!');
+
 class MusicDB {
     constructor() {
         this.db = null;
@@ -162,6 +164,8 @@ class MusicPlayer {
         this.playlistTabs = document.getElementById('playlistTabs');
         this.fileInput = document.getElementById('fileInput');
         this.folderInput = document.getElementById('folderInput');
+        console.log('File input element:', this.fileInput);
+        console.log('Folder input element:', this.folderInput);
         this.playerCard = document.querySelector('.player');
         this.playerMaxBtn = document.getElementById('playerMaxBtn');
         
@@ -254,8 +258,15 @@ class MusicPlayer {
         this.volumeBtn.addEventListener('click', () => this.toggleMute());
         
         // File upload
-        this.fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
-        this.folderInput.addEventListener('change', (e) => this.handleFolderUpload(e));
+        console.log('Setting up file upload event listeners...');
+        this.fileInput.addEventListener('change', (e) => {
+            console.log('File input change event triggered!');
+            this.handleFileUpload(e);
+        });
+        this.folderInput.addEventListener('change', (e) => {
+            console.log('Folder input change event triggered!');
+            this.handleFolderUpload(e);
+        });
         
         // Modal events
         this.modalClose.addEventListener('click', () => this.hidePlaylistModal());
