@@ -2290,13 +2290,13 @@ body[data-theme="light"] {
     --accent-gradient: linear-gradient(45deg, #14b8a6, #0d9488);
 }
 
-/* Purple Theme - Vibrant purple/blue design */
+/* Purple Theme - Darker purple/blue design */
 body[data-theme="purple"] {
-    --primary-bg: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
-    --primary-color: #8b5cf6;
-    --primary-gradient: linear-gradient(45deg, #7c3aed, #5b21b6);
-    --secondary-gradient: linear-gradient(45deg, #a855f7, #9333ea);
-    --accent-gradient: linear-gradient(45deg, #ec4899, #be185d);
+    --primary-bg: linear-gradient(135deg, #0f0d2a 0%, #1e1a3f 50%, #2d1b69 100%);
+    --primary-color: #6d28d9;
+    --primary-gradient: linear-gradient(45deg, #5b21b6, #4c1d95);
+    --secondary-gradient: linear-gradient(45deg, #7c3aed, #6d28d9);
+    --accent-gradient: linear-gradient(45deg, #be185d, #9d174d);
 }
 
 body[data-theme="dark"] {
@@ -2733,31 +2733,31 @@ body[data-theme="light"] .set-default-btn:hover {
 
 /* Purple theme progress bars and volume sliders */
 body[data-theme="purple"] .progress {
-    background: linear-gradient(180deg, rgba(139, 92, 246, 0.95), rgba(124, 58, 237, 0.8));
-    box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.2), 0 6px 14px rgba(139, 92, 246, 0.4);
+    background: linear-gradient(180deg, rgba(109, 40, 217, 0.95), rgba(91, 33, 182, 0.8));
+    box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.2), 0 6px 14px rgba(109, 40, 217, 0.4);
 }
 
 body[data-theme="purple"] .volume-progress {
-    background: linear-gradient(180deg, rgba(139, 92, 246, 0.95), rgba(124, 58, 237, 0.8));
-    box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.2), 0 4px 10px rgba(139, 92, 246, 0.4);
+    background: linear-gradient(180deg, rgba(109, 40, 217, 0.95), rgba(91, 33, 182, 0.8));
+    box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.2), 0 4px 10px rgba(109, 40, 217, 0.4);
 }
 
 body[data-theme="purple"] .progress-bar {
-    background: rgba(236, 72, 153, 0.4) !important;
+    background: rgba(190, 24, 93, 0.4) !important;
 }
 
 body[data-theme="purple"] .volume-bar {
-    background: rgba(236, 72, 153, 0.4) !important;
+    background: rgba(190, 24, 93, 0.4) !important;
 }
 
 body[data-theme="purple"] .progress-handle {
     background: radial-gradient(circle at 30% 30%, #ffffff 0%, #f3e8ff 60%, #e9d5ff 100%) !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 10px rgba(139, 92, 246, 0.6) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 10px rgba(109, 40, 217, 0.6) !important;
 }
 
 body[data-theme="purple"] .volume-handle {
     background: radial-gradient(circle at 30% 30%, #ffffff 0%, #f3e8ff 60%, #e9d5ff 100%) !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), 0 0 8px rgba(139, 92, 246, 0.6) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), 0 0 8px rgba(109, 40, 217, 0.6) !important;
 }
 
 body[data-theme="purple"] .volume-percentage {
