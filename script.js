@@ -2725,7 +2725,13 @@ class MusicPlayer {
         });
         
         this.saveSettings();
-        const themeName = theme === 'glass' ? 'Glass' : 'Dark';
+        const themeNames = {
+            'glass': 'Glass',
+            'dark': 'Dark', 
+            'light': 'Light',
+            'purple': 'Purple'
+        };
+        const themeName = themeNames[theme] || theme;
         this.showNotification(`Switched to ${themeName} theme`, 'fa-palette');
     }
 
