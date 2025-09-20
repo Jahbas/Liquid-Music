@@ -28,16 +28,8 @@ class MusicDB {
                 console.log('Could not request persistent storage:', e);
             }
             
-            // Try to delete and recreate the database if it's corrupted
-            const deleteRequest = indexedDB.deleteDatabase('musicPlayerDB');
-            deleteRequest.onsuccess = () => {
-                console.log('Old database deleted, creating new one...');
-                this.createNewDatabase(resolve, reject);
-            };
-            deleteRequest.onerror = () => {
-                console.log('Could not delete old database, trying to open existing...');
-                this.createNewDatabase(resolve, reject);
-            };
+            // Try to open existing database first
+            this.createNewDatabase(resolve, reject);
         });
     }
     
@@ -163,6 +155,25 @@ class MusicDB {
             console.log('❌ File persistence test ERROR for:', id, e);
             this.indexedDBKeys.delete(id);
         }
+    }
+    
+    // Method to clear database (for debugging only)
+    async clearDatabase() {
+        console.log('Clearing database...');
+        return new Promise((resolve, reject) => {
+            const deleteRequest = indexedDB.deleteDatabase('musicPlayerDB');
+            deleteRequest.onsuccess = () => {
+                console.log('Database cleared successfully');
+                this.indexedDBKeys.clear();
+                this.fallbackKeys.clear();
+                this.fallbackStorage.clear();
+                resolve();
+            };
+            deleteRequest.onerror = () => {
+                console.log('Failed to clear database:', deleteRequest.error);
+                reject(deleteRequest.error);
+            };
+        });
     }
     
     useFallbackStorage(id, file, resolve) {
