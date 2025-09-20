@@ -38,10 +38,47 @@ class MusicDB {
             console.log('Saving file to database:', file.name, 'Size:', file.size);
             const id = 'track_' + Date.now() + '_' + Math.random().toString(36).slice(2);
             
-            // For now, use fallback storage immediately since IndexedDB is not working reliably
-            // This ensures files are saved and can be played, even if they don't persist on refresh
-            console.log('Using fallback storage immediately for reliability');
-            this.useFallbackStorage(id, file, resolve);
+            // Try IndexedDB first with a short timeout
+            if (this.db) {
+                console.log('Attempting IndexedDB save...');
+                const timeout = setTimeout(() => {
+                    console.log('IndexedDB timeout, using fallback storage');
+                    this.useFallbackStorage(id, file, resolve);
+                }, 2000); // 2 second timeout
+                
+                const tx = this.db.transaction('tracks', 'readwrite');
+                const store = tx.objectStore('tracks');
+                const putRequest = store.put({ id, blob: file });
+                
+                putRequest.onsuccess = () => {
+                    console.log('IndexedDB put request successful');
+                };
+                putRequest.onerror = () => {
+                    console.log('IndexedDB put request failed, using fallback');
+                    clearTimeout(timeout);
+                    this.useFallbackStorage(id, file, resolve);
+                };
+                
+                tx.oncomplete = () => {
+                    console.log('IndexedDB transaction completed successfully');
+                    this.indexedDBKeys.add(id);
+                    clearTimeout(timeout);
+                    resolve(id);
+                };
+                tx.onerror = () => {
+                    console.log('IndexedDB transaction failed, using fallback');
+                    clearTimeout(timeout);
+                    this.useFallbackStorage(id, file, resolve);
+                };
+                tx.onabort = () => {
+                    console.log('IndexedDB transaction aborted, using fallback');
+                    clearTimeout(timeout);
+                    this.useFallbackStorage(id, file, resolve);
+                };
+            } else {
+                console.log('IndexedDB not available, using fallback storage');
+                this.useFallbackStorage(id, file, resolve);
+            }
         });
     }
     
@@ -68,6 +105,24 @@ class MusicDB {
         console.log('Fallback storage count:', this.fallbackKeys.size);
         console.log('IndexedDB storage count:', this.indexedDBKeys.size);
         
+        // Try to save to localStorage for persistence (for smaller files)
+        if (file.size < 10 * 1024 * 1024) { // 10MB limit for localStorage
+            try {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    try {
+                        localStorage.setItem(`track_${id}`, reader.result);
+                        console.log('File also saved to localStorage for persistence');
+                    } catch (e) {
+                        console.log('localStorage save failed (quota exceeded)');
+                    }
+                };
+                reader.readAsDataURL(file);
+            } catch (e) {
+                console.log('localStorage save failed:', e);
+            }
+        }
+        
         // Show warning to user (only once to avoid spam)
         if (window.musicPlayer && this.fallbackKeys.size === 1) {
             window.musicPlayer.showNotification('Using temporary storage - files will be lost on refresh', 'fa-exclamation-triangle');
@@ -83,6 +138,20 @@ class MusicDB {
                 console.log('Getting file from fallback storage:', id);
                 resolve(this.fallbackStorage.get(id) || null);
                 return;
+            }
+            
+            // Check localStorage for persistence
+            try {
+                const localStorageData = localStorage.getItem(`track_${id}`);
+                if (localStorageData) {
+                    console.log('Getting file from localStorage:', id);
+                    // Convert data URL back to blob
+                    const response = fetch(localStorageData);
+                    response.then(res => res.blob()).then(blob => resolve(blob));
+                    return;
+                }
+            } catch (e) {
+                console.log('localStorage retrieval failed:', e);
             }
             
             // Try IndexedDB
