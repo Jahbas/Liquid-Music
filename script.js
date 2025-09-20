@@ -574,16 +574,39 @@ class MusicPlayer {
     }
 
     async handleFolderUpload(event) {
+        console.log('Folder upload started');
         const files = Array.from(event.target.files);
         const audioFiles = files.filter(file => file.type.startsWith('audio/'));
         
+        console.log('Selected files:', files.length, 'Audio files:', audioFiles.length);
+        
         if (audioFiles.length === 0) {
-            // Silently return if no audio files are present
+            console.log('No audio files found in folder');
+            this.showNotification('No audio files found in folder', 'fa-exclamation-triangle');
             return;
         }
         
+        this.showNotification(`Processing ${audioFiles.length} files...`, 'fa-spinner fa-spin');
+        
+        let successCount = 0;
+        let failCount = 0;
+        
         for (const file of audioFiles) {
-            await this.addTrackToPlaylist(file);
+            try {
+                await this.addTrackToPlaylist(file);
+                successCount++;
+            } catch (error) {
+                console.error('Error adding track:', error);
+                failCount++;
+            }
+        }
+        
+        // Show summary
+        if (successCount > 0) {
+            this.showNotification(`Added ${successCount} files successfully`, 'fa-check-circle');
+        }
+        if (failCount > 0) {
+            this.showNotification(`Failed to add ${failCount} files`, 'fa-exclamation-triangle');
         }
         
         // Clear the input
@@ -1182,6 +1205,11 @@ class MusicPlayer {
     play() {
         const currentPlaylist = this.getCurrentPlaylist();
         if (currentPlaylist.length === 0) return;
+        
+        // If no audio source is loaded, load the current track first
+        if (!this.audio.src && this.currentTrackIndex >= 0) {
+            this.loadTrack(this.currentTrackIndex);
+        }
         
         this.audio.play().then(() => {
             this.isPlaying = true;
@@ -2684,6 +2712,10 @@ class MusicPlayer {
                         }
                     })).then(() => {
                         this.renderPlaylist();
+                        // Load the first track if there are tracks
+                        if (this.playlist.length > 0) {
+                            this.loadTrack(0);
+                        }
                         // Fetch durations for tracks that don't have it yet
                         this.playlist.forEach(t => {
                             if (t.url && (!t.duration || t.duration === 0)) {
