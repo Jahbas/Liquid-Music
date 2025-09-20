@@ -3,7 +3,7 @@
 <div align="center">
 
 ![Liquid Glass Music Player](https://img.shields.io/badge/Status-Ready%20to%20Use-brightgreen)
-![Version](https://img.shields.io/badge/Version-5.0.0-blue)
+![Version](https://img.shields.io/badge/Version-5.1.0-blue)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 ![Browser Support](https://img.shields.io/badge/Browser%20Support-Modern%20Browsers-orange)
 ![Developer](https://img.shields.io/badge/Developer-Solo%20Developer-purple)
@@ -324,6 +324,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 *Made with ❤️ by a solo developer for music lovers everywhere*
 
-**Version: v5.0.0**
+**Version: v5.1.0**
 
 </div>
