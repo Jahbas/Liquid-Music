@@ -63,6 +63,9 @@ class MusicDB {
     }
 
     saveFile(file) {
+        console.log('=== saveFile method called ===');
+        console.log('File:', file);
+        console.log('Database:', this.db);
         return new Promise((resolve, reject) => {
             console.log('Saving file to database:', file.name, 'Size:', file.size);
             const id = 'track_' + Date.now() + '_' + Math.random().toString(36).slice(2);
@@ -767,8 +770,11 @@ class MusicPlayer {
 
     async addTrackToPlaylist(file, addToTop = false) {
         console.log('Starting to add track:', file.name, 'Size:', file.size, 'Type:', file.type);
+        console.log('Database object:', this.db);
+        console.log('Database is null?', this.db === null);
         let id;
         try {
+            console.log('About to call saveFile...');
             id = await this.db.saveFile(file);
             console.log('File saved with ID:', id);
         } catch (error) {
