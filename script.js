@@ -33,18 +33,17 @@ class MusicDB {
         });
     }
 
-    saveFile(file, retryCount = 0) {
+    saveFile(file) {
         return new Promise((resolve, reject) => {
-            console.log('Saving file to database:', file.name, 'Size:', file.size, 'Retry:', retryCount);
+            console.log('Saving file to database:', file.name, 'Size:', file.size);
             const id = 'track_' + Date.now() + '_' + Math.random().toString(36).slice(2);
             
             // Try IndexedDB first
             if (this.db) {
                 console.log('Creating transaction with ID:', id);
                 
-                // Longer timeout for first 100 songs, shorter for fallback
-                const isFirst100 = this.getTotalStoredCount() < 100;
-                const timeoutDuration = isFirst100 ? 15000 : 5000; // 15s for first 100, 5s for rest
+                // Shorter timeout to avoid long delays
+                const timeoutDuration = 3000; // 3 seconds max
                 
                 const timeout = setTimeout(() => {
                     console.error(`Database save timeout after ${timeoutDuration/1000} seconds - using fallback storage`);
@@ -63,51 +62,26 @@ class MusicDB {
                 putRequest.onerror = () => {
                     console.error('Put request error:', putRequest.error);
                     clearTimeout(timeout);
-                    
-                    // Retry up to 2 times for first 100 songs
-                    if (retryCount < 2 && isFirst100) {
-                        console.log(`Retrying save operation (attempt ${retryCount + 1}/3)`);
-                        setTimeout(() => {
-                            this.saveFile(file, retryCount + 1).then(resolve).catch(reject);
-                        }, 1000 * (retryCount + 1)); // Exponential backoff
-                    } else {
-                        this.useFallbackStorage(id, file, resolve);
-                    }
+                    this.useFallbackStorage(id, file, resolve);
                 };
                 
                 tx.oncomplete = () => {
                     console.log('Transaction completed - File saved with ID:', id);
                     this.indexedDBKeys.add(id); // Track successful IndexedDB save
+                    console.log('IndexedDB storage count:', this.indexedDBKeys.size);
+                    console.log('Fallback storage count:', this.fallbackKeys.size);
                     clearTimeout(timeout);
                     resolve(id);
                 };
                 tx.onerror = () => {
                     console.error('Transaction error:', tx.error);
                     clearTimeout(timeout);
-                    
-                    // Retry up to 2 times for first 100 songs
-                    if (retryCount < 2 && isFirst100) {
-                        console.log(`Retrying save operation (attempt ${retryCount + 1}/3)`);
-                        setTimeout(() => {
-                            this.saveFile(file, retryCount + 1).then(resolve).catch(reject);
-                        }, 1000 * (retryCount + 1)); // Exponential backoff
-                    } else {
-                        this.useFallbackStorage(id, file, resolve);
-                    }
+                    this.useFallbackStorage(id, file, resolve);
                 };
                 tx.onabort = () => {
                     console.error('Transaction aborted:', tx.error);
                     clearTimeout(timeout);
-                    
-                    // Retry up to 2 times for first 100 songs
-                    if (retryCount < 2 && isFirst100) {
-                        console.log(`Retrying save operation (attempt ${retryCount + 1}/3)`);
-                        setTimeout(() => {
-                            this.saveFile(file, retryCount + 1).then(resolve).catch(reject);
-                        }, 1000 * (retryCount + 1)); // Exponential backoff
-                    } else {
-                        this.useFallbackStorage(id, file, resolve);
-                    }
+                    this.useFallbackStorage(id, file, resolve);
                 };
             } else {
                 console.log('Database not available - using fallback storage');
@@ -136,6 +110,8 @@ class MusicDB {
         this.fallbackStorage.set(id, file);
         this.fallbackKeys.add(id);
         console.log('File saved with ID:', id);
+        console.log('Fallback storage count:', this.fallbackKeys.size);
+        console.log('IndexedDB storage count:', this.indexedDBKeys.size);
         
         // Show warning to user
         if (window.musicPlayer) {
@@ -715,7 +691,7 @@ class MusicPlayer {
             album: metadata.album,
             year: metadata.year,
             genre: metadata.genre,
-            url: URL.createObjectURL(file), // immediate playback without waiting for IDB
+            url: null, // Will be set when needed
             duration: 0,
             album_art: metadata.album_art,
             album_art_mime: metadata.album_art_mime
@@ -726,6 +702,9 @@ class MusicPlayer {
         } else {
             this.playlist.push(track);
         }
+        
+        // Set URL immediately for playback
+        track.url = await this.db.getObjectUrl(track.id);
         
         this.renderPlaylist();
         this.saveToStorage();
