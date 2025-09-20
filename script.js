@@ -3256,4 +3256,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Version: v4.1.1
+// Version: v5.0.0
