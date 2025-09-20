@@ -669,15 +669,22 @@ class MusicPlayer {
 
         if (addToTop) {
             this.playlist.unshift(track);
+            console.log('Added track to top of playlist:', track.name);
         } else {
             this.playlist.push(track);
+            console.log('Added track to end of playlist:', track.name);
         }
+        console.log('Playlist length after adding:', this.playlist.length);
         
         // Set URL immediately for playback
+        console.log('Setting URL for track:', track.name, 'ID:', track.id);
         track.url = await this.db.getObjectUrl(track.id);
+        console.log('URL set for track:', track.name, 'URL:', track.url);
         
+        console.log('Rendering playlist, current length:', this.playlist.length);
         this.renderPlaylist();
         this.saveToStorage();
+        console.log('Track added to playlist successfully:', track.name);
 
         // Preload duration metadata so it shows without needing to play
         this.preloadTrackMetadata(track).catch(() => {});
@@ -694,8 +701,10 @@ class MusicPlayer {
 
     renderPlaylist() {
         const currentPlaylist = this.getCurrentPlaylist();
+        console.log('Rendering playlist, length:', currentPlaylist.length);
         
         if (currentPlaylist.length === 0) {
+            console.log('Playlist is empty, showing empty message');
             this.playlistEl.innerHTML = `
                 <div class="playlist-empty">
                     <i class="fas fa-music"></i>
