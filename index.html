@@ -377,7 +377,13 @@
     </div>
 
 
-    <script src="script.js"></script>
+    <script>
+        console.log('HTML script tag executed - about to load script.js');
+    </script>
+    <script src="script.js?v=4.1.1-debug"></script>
+    <script>
+        console.log('script.js should be loaded now');
+    </script>
     <!-- Toast Container -->
     <div id="toastContainer" class="toast-container"></div>
     <!-- Top-Right Toast Container -->
