@@ -459,6 +459,8 @@ class MusicPlayer {
         console.log('Setting up file upload event listeners...');
         this.fileInput.addEventListener('change', (e) => {
             console.log('File input change event triggered!');
+            console.log('Files selected:', e.target.files.length);
+            console.log('Files:', Array.from(e.target.files).map(f => f.name));
             this.handleFileUpload(e);
         });
         this.folderInput.addEventListener('change', (e) => {
