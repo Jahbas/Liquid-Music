@@ -129,9 +129,18 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     text = resp.read().decode('utf-8', errors='ignore')
                     # Look for a semantic version marker like Version: vX.Y.Z or badge
                     import re
-                    m = re.search(r"Version[\s:-]*v(\d+\.\d+\.\d+(?:\.\d+)?)", text, re.IGNORECASE)
-                    if m:
-                        latest_version = f"v{m.group(1)}"
+                    # Try multiple patterns to find the version
+                    patterns = [
+                        r"Version:\s*v(\d+\.\d+\.\d+(?:\.\d+)?)",  # Version: v5.1.0
+                        r"Version-(\d+\.\d+\.\d+(?:\.\d+)?)",      # Version-5.1.0 (badge)
+                        r"Version[\s:-]*v(\d+\.\d+\.\d+(?:\.\d+)?)" # General pattern
+                    ]
+                    
+                    for pattern in patterns:
+                        m = re.search(pattern, text, re.IGNORECASE)
+                        if m:
+                            latest_version = f"v{m.group(1)}"
+                            break
             except Exception:
                 latest_version = None
 
