@@ -582,23 +582,37 @@ class MusicPlayer {
     async handleFileUpload(event) {
         console.log('File upload started');
         const files = Array.from(event.target.files);
-        console.log('Selected files:', files);
+        console.log('Selected files:', files.length);
+        
+        let successCount = 0;
+        let failCount = 0;
         
         for (const file of files) {
             if (file.type.startsWith('audio/')) {
-                console.log('Processing audio file:', file.name, 'Type:', file.type);
+                console.log('Processing audio file:', file.name, 'Type:', file.type, 'Size:', file.size);
                 this.showNotification(`Processing ${file.name}...`, 'fa-spinner fa-spin');
                 try {
                     await this.addTrackToPlaylist(file);
                     console.log('Successfully added track:', file.name);
+                    successCount++;
                     this.showNotification(`Added ${file.name}`, 'fa-check-circle');
                 } catch (error) {
-                    console.error('Error adding track:', error);
+                    console.error('Error adding track:', file.name, error);
+                    failCount++;
                     this.showNotification(`Failed to add ${file.name}`, 'fa-exclamation-triangle');
                 }
             } else {
                 console.log('Skipping non-audio file:', file.name, 'Type:', file.type);
             }
+        }
+        
+        // Show summary
+        console.log(`Upload complete: ${successCount} successful, ${failCount} failed`);
+        if (successCount > 0) {
+            this.showNotification(`Added ${successCount} files successfully`, 'fa-check-circle');
+        }
+        if (failCount > 0) {
+            this.showNotification(`Failed to add ${failCount} files`, 'fa-exclamation-triangle');
         }
         
         // Clear the input so the same file can be selected again
@@ -647,8 +661,14 @@ class MusicPlayer {
 
     async addTrackToPlaylist(file, addToTop = false) {
         console.log('Starting to add track:', file.name, 'Size:', file.size, 'Type:', file.type);
-        const id = await this.db.saveFile(file);
-        console.log('File saved with ID:', id);
+        let id;
+        try {
+            id = await this.db.saveFile(file);
+            console.log('File saved with ID:', id);
+        } catch (error) {
+            console.error('Failed to save file to database:', file.name, error);
+            throw error;
+        }
         
         // Extract metadata from the file
         let metadata = {
@@ -1208,25 +1228,36 @@ class MusicPlayer {
     }
 
     async loadTrack(index) {
+        console.log('Loading track at index:', index);
         const currentPlaylist = this.getCurrentPlaylist();
-        if (index < 0 || index >= currentPlaylist.length) return;
+        if (index < 0 || index >= currentPlaylist.length) {
+            console.log('Invalid track index:', index, 'Playlist length:', currentPlaylist.length);
+            return;
+        }
         
         this.currentTrackIndex = index;
         const track = currentPlaylist[index];
+        console.log('Loading track:', track.name, 'ID:', track.id, 'URL:', track.url);
 
         if (!track.url && track.id) {
+            console.log('Reconstructing URL for track:', track.name);
             // Reconstruct object URL from IndexedDB on demand
             track.url = await this.db.getObjectUrl(track.id);
+            console.log('Reconstructed URL:', track.url);
         }
 
         if (track.url) {
+            console.log('Setting audio source to:', track.url);
             this.audio.src = track.url;
+        } else {
+            console.error('No URL available for track:', track.name);
         }
         this.updateTrackInfo(track.name || 'Unknown Title', track.artist || 'Unknown Artist', track.album_art, track.album_art_mime);
         this.renderPlaylist();
         
         // Load metadata
         this.audio.load();
+        console.log('Track loaded successfully');
     }
 
     togglePlay() {
@@ -2783,13 +2814,15 @@ class MusicPlayer {
                                 this.db.indexedDBKeys.add(t.id);
                             }
                         }
-                    })).then(() => {
+                    })).then(async () => {
                         this.renderPlaylist();
                         // Load the first track if there are tracks
                         if (this.playlist.length > 0) {
-                            this.loadTrack(0);
+                            console.log('Loading first track after refresh...');
+                            await this.loadTrack(0);
                             // Ensure the audio element is ready for playback
                             this.audio.load();
+                            console.log('First track loaded, audio element ready');
                         }
                         // Fetch durations for tracks that don't have it yet
                         this.playlist.forEach(t => {
