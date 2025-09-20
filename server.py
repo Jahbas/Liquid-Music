@@ -111,7 +111,7 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def handle_version_info(self):
         """Return current version and attempt to fetch latest version (best-effort)."""
         try:
-            current_version = "v5.0.0"
+            current_version = "v5.1.0"
 
             # Best-effort latest version fetch from GitHub; tolerate offline
             latest_version = None
@@ -299,4 +299,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-# Version: v5.0.0
+# Version: v5.1.0
