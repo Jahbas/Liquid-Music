@@ -65,4 +65,15 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
-# Version: v3.2.2.2
+
+# Music files - never commit user's music
+music/
+*.mp3
+*.wav
+*.flac
+*.m4a
+*.aac
+*.ogg
+*.wma
+
+# Version: v5.1.0

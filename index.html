@@ -241,11 +241,38 @@
         
         <div class="setting-group">
             <label class="setting-label">
+                <i class="fas fa-folder"></i>
+                Local Music Folder
+            </label>
+            <div class="setting-option setting-option-compact">
+                <button class="btn-primary btn-compact" id="openMusicFolderBtn">
+                    <i class="fas fa-folder-open"></i>
+                    Open Folder
+                </button>
+                <div class="setting-info">
+                    <span class="setting-name">Local Storage</span>
+                    <span class="setting-desc">Add music files for unlimited storage</span>
+                </div>
+            </div>
+            <div class="setting-option setting-option-compact">
+                <button class="btn-primary btn-compact" id="scanMusicFolderBtn">
+                    <i class="fas fa-sync"></i>
+                    Scan Folder
+                </button>
+                <div class="setting-info">
+                    <span class="setting-name">Refresh Library</span>
+                    <span class="setting-desc">Scan for new music files</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="setting-group">
+            <label class="setting-label">
                 <i class="fas fa-code-branch"></i>
                 Version
             </label>
             <div class="setting-option" id="versionStatus" aria-live="polite">
-                <button class="btn btn-secondary" id="checkUpdatesBtn" data-tooltip="Check for updates now">
+                <button class="btn btn-secondary btn-compact" id="checkUpdatesBtn" data-tooltip="Check for updates now">
                     <i class="fas fa-sync"></i>
                     Check Now
                 </button>

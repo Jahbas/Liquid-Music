@@ -62,6 +62,13 @@ class MusicDB {
             console.log('Saving file to database:', file.name, 'Size:', file.size);
             const id = 'track_' + Date.now() + '_' + Math.random().toString(36).slice(2);
             
+            // Check if we're approaching IndexedDB limits
+            if (this.indexedDBKeys.size >= 150) { // Conservative limit
+                console.log('Approaching IndexedDB limit, using fallback storage');
+                this.useFallbackStorage(id, file, resolve);
+                return;
+            }
+            
             // Try IndexedDB first with a longer timeout
             if (this.db) {
                 console.log('Attempting IndexedDB save...');
@@ -77,9 +84,15 @@ class MusicDB {
                 putRequest.onsuccess = () => {
                     console.log('IndexedDB put request successful');
                 };
-                putRequest.onerror = () => {
-                    console.log('IndexedDB put request failed, using fallback');
+                putRequest.onerror = (event) => {
+                    console.log('IndexedDB put request failed:', event.target.error);
                     clearTimeout(timeout);
+                    // Check if it's a quota error
+                    if (event.target.error && event.target.error.name === 'QuotaExceededError') {
+                        console.log('IndexedDB quota exceeded, switching to fallback for remaining files');
+                        // Clear some old entries to make space
+                        this.clearOldIndexedDBEntries();
+                    }
                     this.useFallbackStorage(id, file, resolve);
                 };
                 
@@ -139,6 +152,32 @@ class MusicDB {
             localStorage.removeItem(key);
         });
         console.log(`Cleared ${toRemove.length} old localStorage entries`);
+    }
+    
+    async clearOldIndexedDBEntries() {
+        if (!this.db) return;
+        
+        console.log('Clearing old IndexedDB entries to make space...');
+        try {
+            const tx = this.db.transaction('tracks', 'readwrite');
+            const store = tx.objectStore('tracks');
+            
+            // Get all keys and remove the oldest 25%
+            const getAllKeysRequest = store.getAllKeys();
+            getAllKeysRequest.onsuccess = () => {
+                const keys = getAllKeysRequest.result;
+                const toRemove = keys.slice(0, Math.floor(keys.length * 0.25));
+                
+                toRemove.forEach(key => {
+                    store.delete(key);
+                    this.indexedDBKeys.delete(key);
+                });
+                
+                console.log(`Cleared ${toRemove.length} old IndexedDB entries`);
+            };
+        } catch (error) {
+            console.log('Error clearing IndexedDB entries:', error);
+        }
     }
     
     async testFilePersistence(id) {
@@ -206,7 +245,7 @@ class MusicDB {
         
         // Show warning to user (only once to avoid spam)
         if (window.musicPlayer && this.fallbackKeys.size === 1) {
-            window.musicPlayer.showNotification('Using temporary storage - files will be lost on refresh', 'fa-exclamation-triangle');
+            window.musicPlayer.showNotification('IndexedDB limit reached - new files will be temporary', 'fa-exclamation-triangle');
         }
         
         resolve(id);
@@ -237,6 +276,9 @@ class MusicDB {
                     response.then(res => res.blob()).then(blob => {
                         console.log('localStorage blob retrieved, size:', blob.size);
                         resolve(blob);
+                    }).catch(error => {
+                        console.log('localStorage blob conversion failed:', error);
+                        resolve(null);
                     });
                     return;
                 }
@@ -347,6 +389,9 @@ class MusicPlayer {
         
         // Storage status elements
         this.storageInfo = document.getElementById('storageInfo');
+        // this.clearOldStorageBtn = document.getElementById('clearOldStorageBtn'); // Removed from UI
+        this.openMusicFolderBtn = document.getElementById('openMusicFolderBtn');
+        this.scanMusicFolderBtn = document.getElementById('scanMusicFolderBtn');
         
         // Progress elements
         this.progressBar = document.getElementById('progressBar');
@@ -445,6 +490,9 @@ class MusicPlayer {
         this.repeatBtn.addEventListener('click', () => this.toggleRepeat());
         this.clearBtn.addEventListener('click', () => this.clearPlaylist());
         this.newPlaylistBtn.addEventListener('click', () => this.showPlaylistModal());
+        // this.clearOldStorageBtn.addEventListener('click', () => this.clearOldStorage()); // Removed from UI
+        this.openMusicFolderBtn.addEventListener('click', () => this.openMusicFolder());
+        this.scanMusicFolderBtn.addEventListener('click', () => this.scanMusicFolder());
         
         // Confirmation dialog events
         this.confirmDialogCancel.addEventListener('click', () => this.hideConfirmDialog());
@@ -851,10 +899,14 @@ class MusicPlayer {
         }
         console.log('Playlist length after adding:', this.playlist.length);
         
-        // Set URL immediately for playback
-        console.log('Setting URL for track:', track.name, 'ID:', track.id);
-        track.url = await this.db.getObjectUrl(track.id);
-        console.log('URL set for track:', track.name, 'URL:', track.url);
+        // Set URL immediately for playback (only if not already set for local files)
+        if (!track.url) {
+            console.log('Setting URL for track:', track.name, 'ID:', track.id);
+            track.url = await this.db.getObjectUrl(track.id);
+            console.log('URL set for track:', track.name, 'URL:', track.url);
+        } else {
+            console.log('Track already has URL:', track.name, 'URL:', track.url);
+        }
         
         console.log('Rendering playlist, current length:', this.playlist.length);
         this.renderPlaylist();
@@ -2665,6 +2717,131 @@ class MusicPlayer {
         }
     }
 
+    async clearOldStorage() {
+        try {
+            // Clear old IndexedDB entries
+            await this.db.clearOldIndexedDBEntries();
+            
+            // Clear old localStorage entries
+            this.db.clearOldLocalStorageEntries();
+            
+            // Update storage status
+            this.updateStorageStatus();
+            
+            // Show success notification
+            this.showNotification('Old files cleared to make space for new ones', 'fa-broom');
+            
+        } catch (error) {
+            console.error('Error clearing old storage:', error);
+            this.showNotification('Error clearing old files', 'fa-exclamation-triangle');
+        }
+    }
+
+    openMusicFolder() {
+        // Create a music folder in the same directory as the app
+        const musicFolderPath = './music';
+        
+        // Show instructions to the user
+        this.showNotification('Music folder: ./music - Add your music files there!', 'fa-folder-open');
+        
+        // Try to open the folder (this will work if the server is running)
+        try {
+            // Create a link to open the folder
+            const link = document.createElement('a');
+            link.href = musicFolderPath;
+            link.target = '_blank';
+            link.click();
+        } catch (error) {
+            console.log('Could not open folder directly:', error);
+        }
+        
+        // Show detailed instructions
+        setTimeout(() => {
+            this.showNotification('1. Create a "music" folder in the app directory 2. Add your MP3 files 3. Click "Scan Music Folder"', 'fa-info-circle');
+        }, 2000);
+    }
+
+    async scanMusicFolder() {
+        try {
+            // Show loading notification
+            this.showNotification('Scanning music folder...', 'fa-sync');
+            
+            // Try to fetch the music folder contents from the server
+            const response = await fetch('/api/music-folder');
+            
+            if (response.ok) {
+                const files = await response.json();
+                
+                if (files.length === 0) {
+                    this.showNotification('No music files found in the music folder', 'fa-exclamation-triangle');
+                    return;
+                }
+                
+                // Add files to playlist with metadata extraction
+                let addedCount = 0;
+                const totalFiles = files.length;
+                
+                // Show progress notification
+                this.showNotification(`Extracting metadata for ${totalFiles} files...`, 'fa-music');
+                
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    try {
+                        // Update progress
+                        if (i % 10 === 0 || i === files.length - 1) {
+                            this.showNotification(`Processing ${i + 1}/${totalFiles} files...`, 'fa-music');
+                        }
+                        
+                        // Fetch metadata for the file
+                        const metadataResponse = await fetch(`/api/music-metadata/${encodeURIComponent(file.path)}`);
+                        let metadata = {};
+                        
+                        if (metadataResponse.ok) {
+                            metadata = await metadataResponse.json();
+                        }
+                        
+                        // Create a track object with extracted metadata
+                        const track = {
+                            id: `local_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+                            name: metadata.title || file.name.replace(/\.[^/.]+$/, ""), // Use extracted title or filename
+                            artist: metadata.artist || "Unknown Artist",
+                            album: metadata.album || "Local Music",
+                            year: metadata.year || "",
+                            genre: metadata.genre || "",
+                            duration: metadata.duration || 0,
+                            album_art: metadata.album_art || null,
+                            album_art_mime: metadata.album_art_mime || null,
+                            url: `/api/music-file/${encodeURIComponent(file.path)}`,
+                            isLocalFile: true
+                        };
+                        
+                        // Add to playlist directly
+                        this.playlist.push(track);
+                        addedCount++;
+                        
+                    } catch (error) {
+                        console.error('Error adding file:', file.name, error);
+                    }
+                }
+                
+                // Update the UI after adding all files
+                if (addedCount > 0) {
+                    this.renderPlaylist();
+                    this.saveToStorage();
+                }
+                
+                this.showNotification(`Added ${addedCount} files from music folder`, 'fa-music');
+                
+            } else {
+                this.showNotification('Music folder not found. Create a "music" folder in the app directory.', 'fa-exclamation-triangle');
+            }
+            
+        } catch (error) {
+            console.error('Error scanning music folder:', error);
+            this.showNotification('Error scanning music folder. Make sure the server is running.', 'fa-exclamation-triangle');
+        }
+    }
+
     // Theme section removed
 
     // changeTheme removed; always dark
@@ -2919,7 +3096,7 @@ class MusicPlayer {
 
     // Storage Management
     saveToStorage() {
-        // Persist only serializable metadata (exclude object URLs and File/Blob)
+        // Persist only serializable metadata (exclude object URLs and File/Blob, but keep local file URLs)
         const sanitizeTracks = (tracks) => tracks.map(t => ({ 
             id: t.id, 
             name: t.name, 
@@ -2929,7 +3106,9 @@ class MusicPlayer {
             genre: t.genre,
             duration: t.duration || 0,
             album_art: t.album_art,
-            album_art_mime: t.album_art_mime
+            album_art_mime: t.album_art_mime,
+            url: t.isLocalFile ? t.url : null, // Preserve URL for local files
+            isLocalFile: t.isLocalFile || false
         }));
         const data = {
             playlist: sanitizeTracks(this.playlist),
@@ -2952,21 +3131,22 @@ class MusicPlayer {
                 
                 if (parsed.playlist) {
                     // Rehydrate playlist and reconstruct URLs asynchronously
-                    this.playlist = parsed.playlist.map(t => ({ 
-                        id: t.id, 
-                        name: t.name, 
+                    this.playlist = parsed.playlist.map(t => ({
+                        id: t.id,
+                        name: t.name,
                         artist: t.artist,
                         album: t.album,
                         year: t.year,
                         genre: t.genre,
                         duration: t.duration || 0, 
-                        url: null,
+                        url: t.url || null, // Restore URL for local files
                         album_art: t.album_art,
-                        album_art_mime: t.album_art_mime
+                        album_art_mime: t.album_art_mime,
+                        isLocalFile: t.isLocalFile || false
                     }));
                     // Preload object URLs in background and track which are in IndexedDB
                     Promise.all(this.playlist.map(async (t) => {
-                        if (t.id) {
+                        if (t.id && !t.isLocalFile) {
                             t.url = await this.db.getObjectUrl(t.id);
                             // If we got a URL, it means the file is in IndexedDB
                             if (t.url) {
@@ -3190,6 +3370,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('Database initialized successfully');
     } catch (e) {
         console.error('IndexedDB initialization failed:', e);
+        // Continue anyway - the app can still work with fallback storage
     }
     musicPlayer = new MusicPlayer(db);
     window.musicPlayer = musicPlayer; // Make globally available

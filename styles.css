@@ -1242,6 +1242,26 @@ body[data-theme="purple"] .playlist-management {
     gap: 8px;
 }
 
+/* Compact button variant for settings */
+.btn-compact {
+    padding: 8px 16px;
+    font-size: 13px;
+    border-radius: 8px;
+    gap: 6px;
+}
+
+/* Icon-only button variant */
+.btn-icon {
+    padding: 8px;
+    min-width: 36px;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+.btn-icon i {
+    font-size: 14px;
+}
+
 .btn-secondary {
     background: rgba(255, 255, 255, 0.1);
     color: #ffffff;
@@ -2083,6 +2103,24 @@ body.panels-collapsed .collapse-panel {
     margin-top: 8px;
 }
 
+/* Compact setting option for buttons */
+.setting-option-compact {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px 12px;
+}
+
+.setting-option-compact .btn {
+    width: 100%;
+    margin: 0;
+}
+
+.setting-option-compact .setting-info {
+    margin: 0;
+    text-align: center;
+}
+
 .switch {
     position: relative;
     display: inline-block;
@@ -2212,11 +2250,11 @@ body.no-bg .gradient-orb {
 .theme-selector {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 8px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
-    padding: 12px 16px;
+    padding: 10px 12px;
     margin-top: 8px;
 }
 
@@ -2224,17 +2262,17 @@ body.no-bg .gradient-orb {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
-    padding: 12px 8px;
+    gap: 4px;
+    padding: 8px 6px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: 8px;
     color: rgba(255, 255, 255, 0.7);
     cursor: pointer;
     transition: all 0.3s ease;
     font-size: 11px;
     font-weight: 500;
-    min-height: 60px;
+    min-height: 50px;
 }
 
 .theme-btn:hover {
@@ -2252,7 +2290,7 @@ body.no-bg .gradient-orb {
 }
 
 .theme-btn i {
-    font-size: 16px;
+    font-size: 14px;
     margin-bottom: 2px;
 }
 

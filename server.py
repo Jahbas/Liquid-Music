@@ -46,6 +46,13 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         # Lightweight API endpoint for version info
         if self.path.startswith('/version'):
             return self.handle_version_info()
+        # Music folder API endpoints
+        elif self.path == '/api/music-folder':
+            return self.handle_music_folder_list()
+        elif self.path.startswith('/api/music-file/'):
+            return self.handle_music_file()
+        elif self.path.startswith('/api/music-metadata/'):
+            return self.handle_music_metadata()
         # Fallback to default static file serving
         return super().do_GET()
 
@@ -140,6 +147,111 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             self.send_error(500, f"Error generating version info: {str(e)}")
 
+    def handle_music_folder_list(self):
+        """List all music files in the music folder."""
+        try:
+            music_folder = Path('music')
+            
+            if not music_folder.exists():
+                self.send_error(404, "Music folder not found")
+                return
+            
+            # Get all audio files
+            audio_extensions = {'.mp3', '.wav', '.flac', '.m4a', '.aac', '.ogg', '.wma'}
+            music_files = []
+            
+            for file_path in music_folder.rglob('*'):
+                if file_path.is_file() and file_path.suffix.lower() in audio_extensions:
+                    music_files.append({
+                        'name': file_path.name,
+                        'path': str(file_path.relative_to(music_folder)),
+                        'size': file_path.stat().st_size,
+                        'modified': file_path.stat().st_mtime
+                    })
+            
+            # Sort by name
+            music_files.sort(key=lambda x: x['name'].lower())
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(music_files).encode('utf-8'))
+            
+        except Exception as e:
+            self.send_error(500, f"Error listing music folder: {str(e)}")
+
+    def handle_music_file(self):
+        """Serve a specific music file from the music folder."""
+        try:
+            # Extract file path from URL (includes subfolders)
+            file_path_str = urllib.parse.unquote(self.path.split('/api/music-file/')[-1])
+            music_folder = Path('music')
+            file_path = music_folder / file_path_str
+            
+            if not file_path.exists() or not file_path.is_file():
+                self.send_error(404, "Music file not found")
+                return
+            
+            # Check if it's an audio file
+            audio_extensions = {'.mp3', '.wav', '.flac', '.m4a', '.aac', '.ogg', '.wma'}
+            if file_path.suffix.lower() not in audio_extensions:
+                self.send_error(400, "Not an audio file")
+                return
+            
+            # Serve the file
+            self.send_response(200)
+            self.send_header('Content-Type', 'audio/mpeg')  # Default to MP3
+            self.send_header('Content-Length', str(file_path.stat().st_size))
+            self.end_headers()
+            
+            with open(file_path, 'rb') as f:
+                self.wfile.write(f.read())
+                
+        except Exception as e:
+            self.send_error(500, f"Error serving music file: {str(e)}")
+
+    def handle_music_metadata(self):
+        """Extract metadata from a music file in the music folder."""
+        try:
+            # Extract file path from URL (includes subfolders)
+            file_path_str = urllib.parse.unquote(self.path.split('/api/music-metadata/')[-1])
+            music_folder = Path('music')
+            file_path = music_folder / file_path_str
+            
+            if not file_path.exists() or not file_path.is_file():
+                self.send_error(404, "Music file not found")
+                return
+            
+            # Check if it's an audio file
+            audio_extensions = {'.mp3', '.wav', '.flac', '.m4a', '.aac', '.ogg', '.wma'}
+            if file_path.suffix.lower() not in audio_extensions:
+                self.send_error(400, "Not an audio file")
+                return
+            
+            # Import metadata extraction function
+            from metadata_reader import extract_metadata, parse_filename_metadata
+            
+            # Extract metadata
+            metadata = extract_metadata(str(file_path))
+            
+            # If extraction failed, try filename parsing as fallback
+            if 'error' in metadata:
+                filename = file_path.name  # Use just the filename for parsing
+                filename_metadata = parse_filename_metadata(filename)
+                metadata = {**filename_metadata, "file_name": filename}
+            
+            # Send JSON response
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            
+            response_data = json.dumps(metadata, indent=2)
+            self.wfile.write(response_data.encode('utf-8'))
+                
+        except Exception as e:
+            self.send_error(500, f"Error extracting metadata: {str(e)}")
+
 def main():
     PORT = 8000
     
@@ -154,6 +266,13 @@ def main():
     if missing_files:
         print(f"Error: Missing required files: {', '.join(missing_files)}")
         sys.exit(1)
+    
+    # Create music folder if it doesn't exist
+    music_folder = Path('music')
+    if not music_folder.exists():
+        music_folder.mkdir()
+        print(f"📁 Created music folder: {music_folder.absolute()}")
+        print(f"💡 Add your music files to this folder for unlimited storage!")
     
     # Create server
     with socketserver.TCPServer(("", PORT), CustomHTTPRequestHandler) as httpd:
