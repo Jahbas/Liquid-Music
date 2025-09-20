@@ -39,16 +39,42 @@ class MusicDB {
                 return;
             }
             const id = 'track_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+            console.log('Creating transaction with ID:', id);
+            
+            // Add timeout to prevent hanging
+            const timeout = setTimeout(() => {
+                console.error('Database save timeout after 10 seconds');
+                reject(new Error('Database save timeout'));
+            }, 10000);
+            
             const tx = this.db.transaction('tracks', 'readwrite');
             const store = tx.objectStore('tracks');
-            store.put({ id, blob: file });
+            console.log('Putting file in store...');
+            const putRequest = store.put({ id, blob: file });
+            
+            putRequest.onsuccess = () => {
+                console.log('Put request successful');
+            };
+            putRequest.onerror = () => {
+                console.error('Put request error:', putRequest.error);
+                clearTimeout(timeout);
+                reject(putRequest.error);
+            };
+            
             tx.oncomplete = () => {
-                console.log('File saved with ID:', id);
+                console.log('Transaction completed - File saved with ID:', id);
+                clearTimeout(timeout);
                 resolve(id);
             };
             tx.onerror = () => {
-                console.error('Database transaction error:', tx.error);
+                console.error('Transaction error:', tx.error);
+                clearTimeout(timeout);
                 reject(tx.error);
+            };
+            tx.onabort = () => {
+                console.error('Transaction aborted:', tx.error);
+                clearTimeout(timeout);
+                reject(new Error('Transaction aborted'));
             };
         });
     }
