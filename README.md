@@ -20,7 +20,7 @@
 
 ## 🌟 What Makes This Special?
 
-Experience music like never before with **Liquid Glass Music Player v5.0.0** - a beautifully crafted web application developed by a solo developer that combines cutting-edge design with powerful functionality. Featuring mesmerizing glassmorphism effects, automatic album art display, intelligent metadata extraction, and an intuitive interface that makes managing your music collection a joy.
+Experience music like never before with **Liquid Glass Music Player v5.1.0** - a beautifully crafted web application developed by a solo developer that combines cutting-edge design with powerful functionality. Featuring mesmerizing glassmorphism effects, automatic album art display, intelligent metadata extraction, and an intuitive interface that makes managing your music collection a joy.
 
 ### 🎨 Visual Excellence
 - **Liquid Glass Design**: Translucent cards with backdrop blur effects that create depth and elegance
