@@ -38,55 +38,10 @@ class MusicDB {
             console.log('Saving file to database:', file.name, 'Size:', file.size);
             const id = 'track_' + Date.now() + '_' + Math.random().toString(36).slice(2);
             
-            // Try IndexedDB first
-            if (this.db) {
-                console.log('Creating transaction with ID:', id);
-                
-                // Shorter timeout to avoid long delays
-                const timeoutDuration = 3000; // 3 seconds max
-                
-                const timeout = setTimeout(() => {
-                    console.error(`Database save timeout after ${timeoutDuration/1000} seconds - using fallback storage`);
-                    clearTimeout(timeout);
-                    this.useFallbackStorage(id, file, resolve);
-                }, timeoutDuration);
-                
-                const tx = this.db.transaction('tracks', 'readwrite');
-                const store = tx.objectStore('tracks');
-                console.log('Putting file in store...');
-                const putRequest = store.put({ id, blob: file });
-                
-                putRequest.onsuccess = () => {
-                    console.log('Put request successful');
-                };
-                putRequest.onerror = () => {
-                    console.error('Put request error:', putRequest.error);
-                    clearTimeout(timeout);
-                    this.useFallbackStorage(id, file, resolve);
-                };
-                
-                tx.oncomplete = () => {
-                    console.log('Transaction completed - File saved with ID:', id);
-                    this.indexedDBKeys.add(id); // Track successful IndexedDB save
-                    console.log('IndexedDB storage count:', this.indexedDBKeys.size);
-                    console.log('Fallback storage count:', this.fallbackKeys.size);
-                    clearTimeout(timeout);
-                    resolve(id);
-                };
-                tx.onerror = () => {
-                    console.error('Transaction error:', tx.error);
-                    clearTimeout(timeout);
-                    this.useFallbackStorage(id, file, resolve);
-                };
-                tx.onabort = () => {
-                    console.error('Transaction aborted:', tx.error);
-                    clearTimeout(timeout);
-                    this.useFallbackStorage(id, file, resolve);
-                };
-            } else {
-                console.log('Database not available - using fallback storage');
-                this.useFallbackStorage(id, file, resolve);
-            }
+            // For now, use fallback storage immediately since IndexedDB is not working reliably
+            // This ensures files are saved and can be played, even if they don't persist on refresh
+            console.log('Using fallback storage immediately for reliability');
+            this.useFallbackStorage(id, file, resolve);
         });
     }
     
@@ -113,14 +68,9 @@ class MusicDB {
         console.log('Fallback storage count:', this.fallbackKeys.size);
         console.log('IndexedDB storage count:', this.indexedDBKeys.size);
         
-        // Show warning to user
-        if (window.musicPlayer) {
-            const totalStored = this.getTotalStoredCount();
-            if (totalStored <= 100) {
-                window.musicPlayer.showNotification('Storage issue - files may not persist on refresh', 'fa-exclamation-triangle');
-            } else {
-                window.musicPlayer.showNotification('Using temporary storage (files will be lost on refresh)', 'fa-exclamation-triangle');
-            }
+        // Show warning to user (only once to avoid spam)
+        if (window.musicPlayer && this.fallbackKeys.size === 1) {
+            window.musicPlayer.showNotification('Using temporary storage - files will be lost on refresh', 'fa-exclamation-triangle');
         }
         
         resolve(id);
@@ -2503,7 +2453,7 @@ class MusicPlayer {
             // All files are temporary
             this.storageInfo.innerHTML = `
                 <span style="color: #FF9800;">${temporaryCount} files in temporary storage</span>
-                <br><small>Files will be lost on refresh</small>
+                <br><small>Files will be lost on refresh (IndexedDB not working)</small>
             `;
         } else {
             // Mixed storage
