@@ -4,6 +4,8 @@ console.log('Script.js loaded successfully!');
 class MusicDB {
     constructor() {
         this.db = null;
+        this.fallbackStorage = new Map(); // In-memory fallback
+        this.fallbackKeys = new Set(); // Track which files are in fallback
     }
 
     open() {
@@ -33,59 +35,88 @@ class MusicDB {
     saveFile(file) {
         return new Promise((resolve, reject) => {
             console.log('Saving file to database:', file.name, 'Size:', file.size);
-            if (!this.db) {
-                console.error('Database not initialized!');
-                reject(new Error('Database not initialized'));
-                return;
-            }
             const id = 'track_' + Date.now() + '_' + Math.random().toString(36).slice(2);
-            console.log('Creating transaction with ID:', id);
             
-            // Add timeout to prevent hanging
-            const timeout = setTimeout(() => {
-                console.error('Database save timeout after 10 seconds');
-                reject(new Error('Database save timeout'));
-            }, 10000);
-            
-            const tx = this.db.transaction('tracks', 'readwrite');
-            const store = tx.objectStore('tracks');
-            console.log('Putting file in store...');
-            const putRequest = store.put({ id, blob: file });
-            
-            putRequest.onsuccess = () => {
-                console.log('Put request successful');
-            };
-            putRequest.onerror = () => {
-                console.error('Put request error:', putRequest.error);
-                clearTimeout(timeout);
-                reject(putRequest.error);
-            };
-            
-            tx.oncomplete = () => {
-                console.log('Transaction completed - File saved with ID:', id);
-                clearTimeout(timeout);
-                resolve(id);
-            };
-            tx.onerror = () => {
-                console.error('Transaction error:', tx.error);
-                clearTimeout(timeout);
-                reject(tx.error);
-            };
-            tx.onabort = () => {
-                console.error('Transaction aborted:', tx.error);
-                clearTimeout(timeout);
-                reject(new Error('Transaction aborted'));
-            };
+            // Try IndexedDB first
+            if (this.db) {
+                console.log('Creating transaction with ID:', id);
+                
+                // Add timeout to prevent hanging
+                const timeout = setTimeout(() => {
+                    console.error('Database save timeout after 5 seconds - using fallback storage');
+                    clearTimeout(timeout);
+                    this.useFallbackStorage(id, file, resolve);
+                }, 5000);
+                
+                const tx = this.db.transaction('tracks', 'readwrite');
+                const store = tx.objectStore('tracks');
+                console.log('Putting file in store...');
+                const putRequest = store.put({ id, blob: file });
+                
+                putRequest.onsuccess = () => {
+                    console.log('Put request successful');
+                };
+                putRequest.onerror = () => {
+                    console.error('Put request error:', putRequest.error);
+                    clearTimeout(timeout);
+                    this.useFallbackStorage(id, file, resolve);
+                };
+                
+                tx.oncomplete = () => {
+                    console.log('Transaction completed - File saved with ID:', id);
+                    clearTimeout(timeout);
+                    resolve(id);
+                };
+                tx.onerror = () => {
+                    console.error('Transaction error:', tx.error);
+                    clearTimeout(timeout);
+                    this.useFallbackStorage(id, file, resolve);
+                };
+                tx.onabort = () => {
+                    console.error('Transaction aborted:', tx.error);
+                    clearTimeout(timeout);
+                    this.useFallbackStorage(id, file, resolve);
+                };
+            } else {
+                console.log('Database not available - using fallback storage');
+                this.useFallbackStorage(id, file, resolve);
+            }
         });
+    }
+    
+    useFallbackStorage(id, file, resolve) {
+        console.log('Using fallback storage with ID:', id);
+        this.fallbackStorage.set(id, file);
+        this.fallbackKeys.add(id);
+        console.log('File saved with ID:', id);
+        
+        // Show warning to user
+        if (window.musicPlayer) {
+            window.musicPlayer.showNotification('Files will be unavailable on refresh!', 'fa-exclamation-triangle');
+        }
+        
+        resolve(id);
     }
 
     getFile(id) {
         return new Promise((resolve, reject) => {
-            const tx = this.db.transaction('tracks', 'readonly');
-            const store = tx.objectStore('tracks');
-            const req = store.get(id);
-            req.onsuccess = () => resolve(req.result?.blob || null);
-            req.onerror = () => reject(req.error);
+            // Check fallback storage first
+            if (this.fallbackKeys.has(id)) {
+                console.log('Getting file from fallback storage:', id);
+                resolve(this.fallbackStorage.get(id) || null);
+                return;
+            }
+            
+            // Try IndexedDB
+            if (this.db) {
+                const tx = this.db.transaction('tracks', 'readonly');
+                const store = tx.objectStore('tracks');
+                const req = store.get(id);
+                req.onsuccess = () => resolve(req.result?.blob || null);
+                req.onerror = () => reject(req.error);
+            } else {
+                resolve(null);
+            }
         });
     }
 
@@ -2860,6 +2891,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('IndexedDB initialization failed:', e);
     }
     musicPlayer = new MusicPlayer(db);
+    window.musicPlayer = musicPlayer; // Make globally available
     console.log('Music player initialized');
     musicPlayer.loadActionLog();
 
