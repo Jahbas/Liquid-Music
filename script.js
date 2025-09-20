@@ -9,28 +9,57 @@ class MusicDB {
         this.indexedDBKeys = new Set(); // Track which files are in IndexedDB
     }
 
-    open() {
-        return new Promise((resolve, reject) => {
+    async open() {
+        return new Promise(async (resolve, reject) => {
             console.log('Opening database...');
-            const request = indexedDB.open('musicPlayerDB', 1);
-            request.onupgradeneeded = (event) => {
-                console.log('Database upgrade needed');
-                const db = event.target.result;
-                if (!db.objectStoreNames.contains('tracks')) {
-                    console.log('Creating tracks object store');
-                    db.createObjectStore('tracks', { keyPath: 'id' });
+            
+            // Request persistent storage for more quota
+            try {
+                if ('storage' in navigator && 'persist' in navigator.storage) {
+                    const isPersistent = await navigator.storage.persist();
+                    console.log('Persistent storage granted:', isPersistent);
+                    
+                    // Get storage quota info
+                    const estimate = await navigator.storage.estimate();
+                    console.log('Storage quota:', Math.round(estimate.quota / 1024 / 1024), 'MB');
+                    console.log('Storage used:', Math.round(estimate.usage / 1024 / 1024), 'MB');
                 }
+            } catch (e) {
+                console.log('Could not request persistent storage:', e);
+            }
+            
+            // Try to delete and recreate the database if it's corrupted
+            const deleteRequest = indexedDB.deleteDatabase('musicPlayerDB');
+            deleteRequest.onsuccess = () => {
+                console.log('Old database deleted, creating new one...');
+                this.createNewDatabase(resolve, reject);
             };
-            request.onsuccess = () => {
-                console.log('Database opened successfully');
-                this.db = request.result;
-                resolve();
-            };
-            request.onerror = () => {
-                console.error('Database open error:', request.error);
-                reject(request.error);
+            deleteRequest.onerror = () => {
+                console.log('Could not delete old database, trying to open existing...');
+                this.createNewDatabase(resolve, reject);
             };
         });
+    }
+    
+    createNewDatabase(resolve, reject) {
+        const request = indexedDB.open('musicPlayerDB', 1);
+        request.onupgradeneeded = (event) => {
+            console.log('Database upgrade needed');
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains('tracks')) {
+                console.log('Creating tracks object store');
+                db.createObjectStore('tracks', { keyPath: 'id' });
+            }
+        };
+        request.onsuccess = () => {
+            console.log('Database opened successfully');
+            this.db = request.result;
+            resolve();
+        };
+        request.onerror = () => {
+            console.error('Database open error:', request.error);
+            reject(request.error);
+        };
     }
 
     saveFile(file) {
@@ -38,13 +67,13 @@ class MusicDB {
             console.log('Saving file to database:', file.name, 'Size:', file.size);
             const id = 'track_' + Date.now() + '_' + Math.random().toString(36).slice(2);
             
-            // Try IndexedDB first with a short timeout
+            // Try IndexedDB first with a longer timeout
             if (this.db) {
                 console.log('Attempting IndexedDB save...');
                 const timeout = setTimeout(() => {
                     console.log('IndexedDB timeout, using fallback storage');
                     this.useFallbackStorage(id, file, resolve);
-                }, 2000); // 2 second timeout
+                }, 10000); // 10 second timeout for persistence
                 
                 const tx = this.db.transaction('tracks', 'readwrite');
                 const store = tx.objectStore('tracks');
@@ -97,6 +126,19 @@ class MusicDB {
         return this.fallbackKeys.size;
     }
     
+    clearOldLocalStorageEntries() {
+        console.log('Clearing old localStorage entries to make space...');
+        const keys = Object.keys(localStorage);
+        const trackKeys = keys.filter(key => key.startsWith('track_'));
+        
+        // Remove oldest 50% of tracks to make space
+        const toRemove = trackKeys.slice(0, Math.floor(trackKeys.length / 2));
+        toRemove.forEach(key => {
+            localStorage.removeItem(key);
+        });
+        console.log(`Cleared ${toRemove.length} old localStorage entries`);
+    }
+    
     useFallbackStorage(id, file, resolve) {
         console.log('Using fallback storage with ID:', id);
         this.fallbackStorage.set(id, file);
@@ -105,8 +147,8 @@ class MusicDB {
         console.log('Fallback storage count:', this.fallbackKeys.size);
         console.log('IndexedDB storage count:', this.indexedDBKeys.size);
         
-        // Try to save to localStorage for persistence (for smaller files)
-        if (file.size < 10 * 1024 * 1024) { // 10MB limit for localStorage
+        // Try to save to localStorage for persistence (with quota management)
+        if (file.size < 5 * 1024 * 1024) { // 5MB limit for localStorage
             try {
                 const reader = new FileReader();
                 reader.onload = () => {
@@ -115,6 +157,8 @@ class MusicDB {
                         console.log('File also saved to localStorage for persistence');
                     } catch (e) {
                         console.log('localStorage save failed (quota exceeded)');
+                        // Clear old localStorage entries to make space
+                        this.clearOldLocalStorageEntries();
                     }
                 };
                 reader.readAsDataURL(file);
