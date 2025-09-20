@@ -2556,12 +2556,25 @@ class MusicPlayer {
         }
     }
     
-    updateStorageStatus() {
+    async updateStorageStatus() {
         if (!this.storageInfo) return;
         
         const persistentCount = this.db.getPersistentCount();
         const temporaryCount = this.db.getTemporaryCount();
         const totalStored = persistentCount + temporaryCount;
+        
+        // Get storage quota info
+        let quotaText = '';
+        try {
+            if ('storage' in navigator && 'estimate' in navigator.storage) {
+                const estimate = await navigator.storage.estimate();
+                const quotaMB = Math.round(estimate.quota / 1024 / 1024);
+                const usedMB = Math.round(estimate.usage / 1024 / 1024);
+                quotaText = `<br><small>Storage: ${usedMB}MB / ${quotaMB}MB available</small>`;
+            }
+        } catch (e) {
+            console.log('Could not get storage estimate:', e);
+        }
         
         if (totalStored === 0) {
             this.storageInfo.textContent = 'No files stored';
@@ -2570,12 +2583,14 @@ class MusicPlayer {
             this.storageInfo.innerHTML = `
                 <span style="color: #4CAF50;">${persistentCount} files stored persistently</span>
                 <br><small>All files will persist on refresh</small>
+                ${quotaText}
             `;
         } else if (persistentCount === 0) {
             // All files are temporary
             this.storageInfo.innerHTML = `
                 <span style="color: #FF9800;">${temporaryCount} files in temporary storage</span>
                 <br><small>Files will be lost on refresh (IndexedDB not working)</small>
+                ${quotaText}
             `;
         } else {
             // Mixed storage
@@ -2583,6 +2598,7 @@ class MusicPlayer {
                 <span style="color: #4CAF50;">${persistentCount} persistent</span> + 
                 <span style="color: #FF9800;">${temporaryCount} temporary</span>
                 <br><small>${persistentCount} files will persist on refresh</small>
+                ${quotaText}
             `;
         }
     }
