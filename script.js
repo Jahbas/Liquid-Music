@@ -32,21 +32,24 @@ class MusicDB {
         });
     }
 
-    saveFile(file) {
+    saveFile(file, retryCount = 0) {
         return new Promise((resolve, reject) => {
-            console.log('Saving file to database:', file.name, 'Size:', file.size);
+            console.log('Saving file to database:', file.name, 'Size:', file.size, 'Retry:', retryCount);
             const id = 'track_' + Date.now() + '_' + Math.random().toString(36).slice(2);
             
             // Try IndexedDB first
             if (this.db) {
                 console.log('Creating transaction with ID:', id);
                 
-                // Add timeout to prevent hanging
+                // Longer timeout for first 100 songs, shorter for fallback
+                const isFirst100 = this.getTotalStoredCount() < 100;
+                const timeoutDuration = isFirst100 ? 15000 : 5000; // 15s for first 100, 5s for rest
+                
                 const timeout = setTimeout(() => {
-                    console.error('Database save timeout after 5 seconds - using fallback storage');
+                    console.error(`Database save timeout after ${timeoutDuration/1000} seconds - using fallback storage`);
                     clearTimeout(timeout);
                     this.useFallbackStorage(id, file, resolve);
-                }, 5000);
+                }, timeoutDuration);
                 
                 const tx = this.db.transaction('tracks', 'readwrite');
                 const store = tx.objectStore('tracks');
@@ -59,7 +62,16 @@ class MusicDB {
                 putRequest.onerror = () => {
                     console.error('Put request error:', putRequest.error);
                     clearTimeout(timeout);
-                    this.useFallbackStorage(id, file, resolve);
+                    
+                    // Retry up to 2 times for first 100 songs
+                    if (retryCount < 2 && isFirst100) {
+                        console.log(`Retrying save operation (attempt ${retryCount + 1}/3)`);
+                        setTimeout(() => {
+                            this.saveFile(file, retryCount + 1).then(resolve).catch(reject);
+                        }, 1000 * (retryCount + 1)); // Exponential backoff
+                    } else {
+                        this.useFallbackStorage(id, file, resolve);
+                    }
                 };
                 
                 tx.oncomplete = () => {
@@ -70,18 +82,41 @@ class MusicDB {
                 tx.onerror = () => {
                     console.error('Transaction error:', tx.error);
                     clearTimeout(timeout);
-                    this.useFallbackStorage(id, file, resolve);
+                    
+                    // Retry up to 2 times for first 100 songs
+                    if (retryCount < 2 && isFirst100) {
+                        console.log(`Retrying save operation (attempt ${retryCount + 1}/3)`);
+                        setTimeout(() => {
+                            this.saveFile(file, retryCount + 1).then(resolve).catch(reject);
+                        }, 1000 * (retryCount + 1)); // Exponential backoff
+                    } else {
+                        this.useFallbackStorage(id, file, resolve);
+                    }
                 };
                 tx.onabort = () => {
                     console.error('Transaction aborted:', tx.error);
                     clearTimeout(timeout);
-                    this.useFallbackStorage(id, file, resolve);
+                    
+                    // Retry up to 2 times for first 100 songs
+                    if (retryCount < 2 && isFirst100) {
+                        console.log(`Retrying save operation (attempt ${retryCount + 1}/3)`);
+                        setTimeout(() => {
+                            this.saveFile(file, retryCount + 1).then(resolve).catch(reject);
+                        }, 1000 * (retryCount + 1)); // Exponential backoff
+                    } else {
+                        this.useFallbackStorage(id, file, resolve);
+                    }
                 };
             } else {
                 console.log('Database not available - using fallback storage');
                 this.useFallbackStorage(id, file, resolve);
             }
         });
+    }
+    
+    getTotalStoredCount() {
+        // Count total stored files (both IndexedDB and fallback)
+        return this.fallbackKeys.size;
     }
     
     useFallbackStorage(id, file, resolve) {
@@ -92,7 +127,12 @@ class MusicDB {
         
         // Show warning to user
         if (window.musicPlayer) {
-            window.musicPlayer.showNotification('Files will be unavailable on refresh!', 'fa-exclamation-triangle');
+            const totalStored = this.getTotalStoredCount();
+            if (totalStored <= 100) {
+                window.musicPlayer.showNotification('Storage issue - files may not persist on refresh', 'fa-exclamation-triangle');
+            } else {
+                window.musicPlayer.showNotification('Using temporary storage (files will be lost on refresh)', 'fa-exclamation-triangle');
+            }
         }
         
         resolve(id);
@@ -166,6 +206,7 @@ class MusicPlayer {
         this.loadFromStorage();
         this.loadSettings();
         this.loadDefaultVolume();
+        this.updateStorageStatus();
         
         // Set default theme if none is loaded
         if (!document.body.getAttribute('data-theme')) {
@@ -195,6 +236,9 @@ class MusicPlayer {
         this.confirmDialogMessage = document.getElementById('confirmDialogMessage');
         this.confirmDialogCancel = document.getElementById('confirmDialogCancel');
         this.confirmDialogConfirm = document.getElementById('confirmDialogConfirm');
+        
+        // Storage status elements
+        this.storageInfo = document.getElementById('storageInfo');
         
         // Progress elements
         this.progressBar = document.getElementById('progressBar');
@@ -682,6 +726,9 @@ class MusicPlayer {
         if (this.playlist.length === 1) {
             this.loadTrack(0);
         }
+        
+        // Update storage status
+        this.updateStorageStatus();
     }
 
     renderPlaylist() {
@@ -2412,6 +2459,27 @@ class MusicPlayer {
         } catch (_) {
             this.showVersionBanner('Version check failed', 'fa-exclamation-triangle', true);
             if (force) this.showNotification('Version check failed', 'fa-exclamation-triangle');
+        }
+    }
+    
+    updateStorageStatus() {
+        if (!this.storageInfo) return;
+        
+        const totalStored = this.db.getTotalStoredCount();
+        const isFirst100 = totalStored <= 100;
+        
+        if (totalStored === 0) {
+            this.storageInfo.textContent = 'No files stored';
+        } else if (isFirst100) {
+            this.storageInfo.innerHTML = `
+                <span style="color: #4CAF50;">${totalStored} files stored persistently</span>
+                <br><small>Files will persist on refresh</small>
+            `;
+        } else {
+            this.storageInfo.innerHTML = `
+                <span style="color: #FF9800;">${totalStored} files stored</span>
+                <br><small>Some files may not persist on refresh</small>
+            `;
         }
     }
 
