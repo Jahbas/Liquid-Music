@@ -34,20 +34,20 @@ class MusicDB {
     }
     
     createNewDatabase(resolve, reject) {
-        const request = indexedDB.open('musicPlayerDB', 1);
-        request.onupgradeneeded = (event) => {
+            const request = indexedDB.open('musicPlayerDB', 1);
+            request.onupgradeneeded = (event) => {
             console.log('Database upgrade needed');
-            const db = event.target.result;
-            if (!db.objectStoreNames.contains('tracks')) {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains('tracks')) {
                 console.log('Creating tracks object store');
-                db.createObjectStore('tracks', { keyPath: 'id' });
-            }
-        };
-        request.onsuccess = () => {
+                    db.createObjectStore('tracks', { keyPath: 'id' });
+                }
+            };
+            request.onsuccess = () => {
             console.log('Database opened successfully');
-            this.db = request.result;
-            resolve();
-        };
+                this.db = request.result;
+                resolve();
+            };
         request.onerror = () => {
             console.error('Database open error:', request.error);
             reject(request.error);
@@ -70,8 +70,8 @@ class MusicDB {
                     this.useFallbackStorage(id, file, resolve);
                 }, 10000); // 10 second timeout for persistence
                 
-                const tx = this.db.transaction('tracks', 'readwrite');
-                const store = tx.objectStore('tracks');
+            const tx = this.db.transaction('tracks', 'readwrite');
+            const store = tx.objectStore('tracks');
                 const putRequest = store.put({ id, blob: file });
                 
                 putRequest.onsuccess = () => {
@@ -247,9 +247,9 @@ class MusicDB {
             // Try IndexedDB
             if (this.db) {
                 console.log('Trying IndexedDB for ID:', id);
-                const tx = this.db.transaction('tracks', 'readonly');
-                const store = tx.objectStore('tracks');
-                const req = store.get(id);
+            const tx = this.db.transaction('tracks', 'readonly');
+            const store = tx.objectStore('tracks');
+            const req = store.get(id);
                 req.onsuccess = () => {
                     const result = req.result?.blob || null;
                     console.log('IndexedDB result for ID:', id, 'Found:', result ? 'YES' : 'NO', 'Size:', result ? result.size : 'N/A');
@@ -399,6 +399,7 @@ class MusicPlayer {
         this.glassEffects = document.getElementById('glassEffects');
         this.animatedBg = document.getElementById('animatedBg');
         this.disableHover = document.getElementById('disableHover');
+        this.thickSongs = document.getElementById('thickSongs');
         this.themeButtons = document.querySelectorAll('.theme-btn');
         this.currentTheme = 'dark';
         this.versionStatus = document.getElementById('versionStatus');
@@ -407,7 +408,6 @@ class MusicPlayer {
         // Default volume elements
         this.defaultVolumeSlider = document.getElementById('defaultVolume');
         this.defaultVolumeInput = document.getElementById('defaultVolumeInput');
-        this.setDefaultBtn = document.getElementById('setDefaultBtn');
 
         // Artists UI elements
         this.artistsToggle = document.getElementById('artistsToggle');
@@ -539,6 +539,7 @@ class MusicPlayer {
         this.glassEffects.addEventListener('change', () => this.toggleGlassEffects());
         this.animatedBg.addEventListener('change', () => this.toggleAnimatedBackground());
         this.disableHover.addEventListener('change', () => this.applyHoverEffectsSetting());
+        this.thickSongs.addEventListener('change', () => this.toggleThickSongs());
         if (this.checkUpdatesBtn) {
             this.checkUpdatesBtn.addEventListener('click', () => this.runVersionCheck(true));
         }
@@ -547,7 +548,6 @@ class MusicPlayer {
         this.defaultVolumeSlider.addEventListener('input', () => this.updateDefaultVolumeFromSlider());
         this.defaultVolumeInput.addEventListener('input', () => this.updateDefaultVolumeFromInput());
         this.defaultVolumeInput.addEventListener('blur', () => this.validateVolumeInput());
-        this.setDefaultBtn.addEventListener('click', () => this.setCurrentVolumeAsDefault());
         
         // Theme events
         this.themeButtons.forEach(button => {
@@ -761,7 +761,7 @@ class MusicPlayer {
         
         for (const file of audioFiles) {
             try {
-                await this.addTrackToPlaylist(file);
+            await this.addTrackToPlaylist(file);
                 successCount++;
             } catch (error) {
                 console.error('Error adding track:', error);
@@ -2602,9 +2602,9 @@ class MusicPlayer {
             const latest = data.latest || null;
             const update = !!data.update_available;
 
-            if (update) {
-                this.showVersionBanner(`Update available: ${latest} (current ${current})`, 'fa-bell', true);
-            } else {
+                if (update) {
+                    this.showVersionBanner(`Update available: ${latest} (current ${current})`, 'fa-bell', true);
+                } else {
                 this.showVersionBanner(`Version ${current}`, 'fa-check', false);
             }
 
@@ -2683,6 +2683,15 @@ class MusicPlayer {
             document.body.classList.remove('no-glass');
         } else {
             document.body.classList.add('no-glass');
+        }
+        this.saveSettings();
+    }
+
+    toggleThickSongs() {
+        if (this.thickSongs.checked) {
+            document.body.classList.add('thick-songs');
+        } else {
+            document.body.classList.remove('thick-songs');
         }
         this.saveSettings();
     }
@@ -2782,19 +2791,6 @@ class MusicPlayer {
         localStorage.setItem('defaultVolume', volume.toString());
     }
 
-    setCurrentVolumeAsDefault() {
-        const currentVolume = Math.round(this.volume * 100);
-        
-        // Update the default volume controls
-        this.defaultVolumeSlider.value = currentVolume;
-        this.defaultVolumeInput.value = currentVolume;
-        
-        // Save to localStorage
-        localStorage.setItem('defaultVolume', this.volume.toString());
-        
-        // Show notification
-        this.showNotification(`Default volume set to ${currentVolume}%`, 'fa-save');
-    }
 
     loadDefaultVolume() {
         const savedVolume = localStorage.getItem('defaultVolume');
@@ -2819,7 +2815,8 @@ class MusicPlayer {
             performanceMode: this.performanceMode.checked,
             glassEffects: this.glassEffects.checked,
             animatedBg: this.animatedBg.checked,
-            noHover: document.body.classList.contains('no-hover')
+            noHover: document.body.classList.contains('no-hover'),
+            thickSongs: this.thickSongs.checked
         };
         localStorage.setItem('musicPlayerSettings', JSON.stringify(settings));
     }
@@ -2884,6 +2881,12 @@ class MusicPlayer {
                 if (parsed.noHover !== undefined) {
                     if (this.disableHover) this.disableHover.checked = !!parsed.noHover;
                     this.applyHoverEffectsSetting();
+                }
+                
+                // Apply thick songs setting
+                if (parsed.thickSongs !== undefined) {
+                    this.thickSongs.checked = parsed.thickSongs;
+                    this.toggleThickSongs();
                 }
             } else {
                 // No settings saved, apply defaults
@@ -2968,7 +2971,7 @@ class MusicPlayer {
                             // If we got a URL, it means the file is in IndexedDB
                             if (t.url) {
                                 this.db.indexedDBKeys.add(t.id);
-                            }
+                        }
                         }
                     })).then(async () => {
                         this.renderPlaylist();

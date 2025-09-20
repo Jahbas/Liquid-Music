@@ -673,6 +673,17 @@ body[data-theme="glass"] .playlist-management {
     clip-path: inset(0 -40px 0 -40px) !important;
 }
 
+/* Allow glow effects to extend beyond borders in new themes (same as dark theme) */
+body[data-theme="light"] .playlist-management {
+    overflow: visible !important;
+    clip-path: inset(0 -40px 0 -40px) !important;
+}
+
+body[data-theme="purple"] .playlist-management {
+    overflow: visible !important;
+    clip-path: inset(0 -40px 0 -40px) !important;
+}
+
 .playlist-header {
     display: flex;
     justify-content: space-between;
@@ -890,14 +901,14 @@ body[data-theme="glass"] .playlist-management {
     display: flex;
     align-items: center;
     gap: 15px;
-    padding: 15px;
+    padding: 8px 12px;
     border-radius: 12px;
-    margin-bottom: 8px;
+    margin: 5px 0;
     cursor: pointer;
     transition: all 0.3s ease;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    min-height: 60px;
+    min-height: 50px;
 }
 
 .playlist-item:hover {
@@ -2514,11 +2525,11 @@ body[data-theme="light"] .volume-progress {
 }
 
 body[data-theme="light"] .progress-bar {
-    background: rgba(20, 184, 166, 0.4) !important;
+    background: rgba(14, 165, 233, 0.4) !important;
 }
 
 body[data-theme="light"] .volume-bar {
-    background: rgba(20, 184, 166, 0.4) !important;
+    background: rgba(14, 165, 233, 0.4) !important;
 }
 
 body[data-theme="light"] .progress-handle {
@@ -2553,6 +2564,17 @@ body[data-theme="light"] .playlist-item.active {
     background: linear-gradient(45deg, rgba(14, 165, 233, 0.2), rgba(2, 132, 199, 0.1));
     border-color: rgba(14, 165, 233, 0.7);
 }
+
+body[data-theme="light"] .playlist-item.selected {
+    background: linear-gradient(45deg, rgba(14, 165, 233, 0.4), rgba(2, 132, 199, 0.3)) !important;
+    border: 5px solid rgba(14, 165, 233, 0.8) !important;
+}
+
+body[data-theme="light"] .playlist-item.selected:hover {
+    background: linear-gradient(45deg, rgba(14, 165, 233, 0.25), rgba(2, 132, 199, 0.15));
+    border: 5px solid rgba(14, 165, 233, 0.7);
+}
+
 
 /* Midnight theme buttons */
 body[data-theme="light"] .btn-primary {
@@ -2760,6 +2782,7 @@ body[data-theme="purple"] .playlist-item.active {
     background: linear-gradient(45deg, rgba(139, 92, 246, 0.2), rgba(124, 58, 237, 0.1));
     border-color: rgba(139, 92, 246, 0.7);
 }
+
 
 /* Purple theme buttons */
 body[data-theme="purple"] .btn-primary {
@@ -3752,7 +3775,65 @@ body[data-theme="glass"] .playlist {
     clip-path: inset(0 -30px 0 -30px) !important;
 }
 
+/* New themes container overflow settings (same as dark theme) */
+body[data-theme="light"] .playlist-container,
+body[data-theme="light"] .playlist-items,
+body[data-theme="light"] .playlist-tabs {
+    overflow: visible !important;
+    clip-path: inset(0 -50px 0 -50px) !important;
+}
+
+body[data-theme="light"] .playlist {
+    overflow-y: auto !important;
+    overflow-x: visible !important;
+    clip-path: inset(0 -30px 0 -30px) !important;
+}
+
+body[data-theme="light"] .playlist-container {
+    padding: 25px 20px !important;
+    margin: -25px -20px !important;
+}
+
+body[data-theme="light"] .playlist {
+    padding: 25px 10px !important;
+    margin: -25px -10px !important;
+}
+
+body[data-theme="purple"] .playlist-container,
+body[data-theme="purple"] .playlist-items,
+body[data-theme="purple"] .playlist-tabs {
+    overflow: visible !important;
+    clip-path: inset(0 -50px 0 -50px) !important;
+}
+
+body[data-theme="purple"] .playlist {
+    overflow-y: auto !important;
+    overflow-x: visible !important;
+    clip-path: inset(0 -30px 0 -30px) !important;
+}
+
+body[data-theme="purple"] .playlist-container {
+    padding: 25px 20px !important;
+    margin: -25px -20px !important;
+}
+
+body[data-theme="purple"] .playlist {
+    padding: 25px 10px !important;
+    margin: -25px -10px !important;
+}
+
 body[data-theme="glass"] .player {
+    overflow: visible !important;
+    clip-path: inset(0 -40px 0 -40px) !important;
+}
+
+/* New themes player overflow settings (same as dark theme) */
+body[data-theme="light"] .player {
+    overflow: visible !important;
+    clip-path: inset(0 -40px 0 -40px) !important;
+}
+
+body[data-theme="purple"] .player {
     overflow: visible !important;
     clip-path: inset(0 -40px 0 -40px) !important;
 }
@@ -3772,10 +3853,6 @@ body[data-theme="glass"] .playlist {
     margin: -25px -10px !important;
 }
 
-body[data-theme="glass"] .playlist-item {
-    margin: 5px 0 !important;
-    padding: 8px 12px !important;
-}
 
 /* Glowing effects for volume bar and progress bar */
 /* Dark Theme Glowing Controls */
@@ -4493,4 +4570,11 @@ body.panels-collapsed .settings-panel {
     user-select: none;
     -webkit-touch-callout: none;
     -webkit-tap-highlight-color: transparent;
+}
+
+/* Song thickness setting - make songs thicker in all themes when enabled */
+body.thick-songs .playlist-item {
+    padding: 15px !important;
+    min-height: 60px !important;
+    margin-bottom: 8px !important;
 }
