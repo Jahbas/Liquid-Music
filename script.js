@@ -6,29 +6,48 @@ class MusicDB {
 
     open() {
         return new Promise((resolve, reject) => {
+            console.log('Opening database...');
             const request = indexedDB.open('musicPlayerDB', 1);
             request.onupgradeneeded = (event) => {
+                console.log('Database upgrade needed');
                 const db = event.target.result;
                 if (!db.objectStoreNames.contains('tracks')) {
+                    console.log('Creating tracks object store');
                     db.createObjectStore('tracks', { keyPath: 'id' });
                 }
             };
             request.onsuccess = () => {
+                console.log('Database opened successfully');
                 this.db = request.result;
                 resolve();
             };
-            request.onerror = () => reject(request.error);
+            request.onerror = () => {
+                console.error('Database open error:', request.error);
+                reject(request.error);
+            };
         });
     }
 
     saveFile(file) {
         return new Promise((resolve, reject) => {
+            console.log('Saving file to database:', file.name, 'Size:', file.size);
+            if (!this.db) {
+                console.error('Database not initialized!');
+                reject(new Error('Database not initialized'));
+                return;
+            }
             const id = 'track_' + Date.now() + '_' + Math.random().toString(36).slice(2);
             const tx = this.db.transaction('tracks', 'readwrite');
             const store = tx.objectStore('tracks');
             store.put({ id, blob: file });
-            tx.oncomplete = () => resolve(id);
-            tx.onerror = () => reject(tx.error);
+            tx.oncomplete = () => {
+                console.log('File saved with ID:', id);
+                resolve(id);
+            };
+            tx.onerror = () => {
+                console.error('Database transaction error:', tx.error);
+                reject(tx.error);
+            };
         });
     }
 
@@ -461,18 +480,24 @@ class MusicPlayer {
     }
 
     async handleFileUpload(event) {
+        console.log('File upload started');
         const files = Array.from(event.target.files);
+        console.log('Selected files:', files);
         
         for (const file of files) {
             if (file.type.startsWith('audio/')) {
+                console.log('Processing audio file:', file.name, 'Type:', file.type);
                 this.showNotification(`Processing ${file.name}...`, 'fa-spinner fa-spin');
                 try {
                     await this.addTrackToPlaylist(file);
+                    console.log('Successfully added track:', file.name);
                     this.showNotification(`Added ${file.name}`, 'fa-check-circle');
                 } catch (error) {
                     console.error('Error adding track:', error);
                     this.showNotification(`Failed to add ${file.name}`, 'fa-exclamation-triangle');
                 }
+            } else {
+                console.log('Skipping non-audio file:', file.name, 'Type:', file.type);
             }
         }
         
@@ -498,7 +523,9 @@ class MusicPlayer {
     }
 
     async addTrackToPlaylist(file, addToTop = false) {
+        console.log('Starting to add track:', file.name, 'Size:', file.size, 'Type:', file.type);
         const id = await this.db.saveFile(file);
+        console.log('File saved with ID:', id);
         
         // Extract metadata from the file
         let metadata = {
@@ -2786,14 +2813,17 @@ class MusicPlayer {
 // Initialize the music player when the page loads
 let musicPlayer;
 document.addEventListener('DOMContentLoaded', async () => {
+    console.log('DOM Content Loaded - Initializing app...');
     
     const db = new MusicDB();
     try {
         await db.open();
+        console.log('Database initialized successfully');
     } catch (e) {
         console.error('IndexedDB initialization failed:', e);
     }
     musicPlayer = new MusicPlayer(db);
+    console.log('Music player initialized');
     musicPlayer.loadActionLog();
 
     // Initialize live system clock
