@@ -6,6 +6,7 @@ class MusicDB {
         this.db = null;
         this.fallbackStorage = new Map(); // In-memory fallback
         this.fallbackKeys = new Set(); // Track which files are in fallback
+        this.indexedDBKeys = new Set(); // Track which files are in IndexedDB
     }
 
     open() {
@@ -76,6 +77,7 @@ class MusicDB {
                 
                 tx.oncomplete = () => {
                     console.log('Transaction completed - File saved with ID:', id);
+                    this.indexedDBKeys.add(id); // Track successful IndexedDB save
                     clearTimeout(timeout);
                     resolve(id);
                 };
@@ -116,6 +118,16 @@ class MusicDB {
     
     getTotalStoredCount() {
         // Count total stored files (both IndexedDB and fallback)
+        return this.indexedDBKeys.size + this.fallbackKeys.size;
+    }
+    
+    getPersistentCount() {
+        // Count files stored in IndexedDB (persistent)
+        return this.indexedDBKeys.size;
+    }
+    
+    getTemporaryCount() {
+        // Count files stored in fallback (temporary)
         return this.fallbackKeys.size;
     }
     
@@ -2465,20 +2477,30 @@ class MusicPlayer {
     updateStorageStatus() {
         if (!this.storageInfo) return;
         
-        const totalStored = this.db.getTotalStoredCount();
-        const isFirst100 = totalStored <= 100;
+        const persistentCount = this.db.getPersistentCount();
+        const temporaryCount = this.db.getTemporaryCount();
+        const totalStored = persistentCount + temporaryCount;
         
         if (totalStored === 0) {
             this.storageInfo.textContent = 'No files stored';
-        } else if (isFirst100) {
+        } else if (temporaryCount === 0) {
+            // All files are persistent
             this.storageInfo.innerHTML = `
-                <span style="color: #4CAF50;">${totalStored} files stored persistently</span>
-                <br><small>Files will persist on refresh</small>
+                <span style="color: #4CAF50;">${persistentCount} files stored persistently</span>
+                <br><small>All files will persist on refresh</small>
+            `;
+        } else if (persistentCount === 0) {
+            // All files are temporary
+            this.storageInfo.innerHTML = `
+                <span style="color: #FF9800;">${temporaryCount} files in temporary storage</span>
+                <br><small>Files will be lost on refresh</small>
             `;
         } else {
+            // Mixed storage
             this.storageInfo.innerHTML = `
-                <span style="color: #FF9800;">${totalStored} files stored</span>
-                <br><small>Some files may not persist on refresh</small>
+                <span style="color: #4CAF50;">${persistentCount} persistent</span> + 
+                <span style="color: #FF9800;">${temporaryCount} temporary</span>
+                <br><small>${persistentCount} files will persist on refresh</small>
             `;
         }
     }
@@ -2773,16 +2795,22 @@ class MusicPlayer {
                         album_art: t.album_art,
                         album_art_mime: t.album_art_mime
                     }));
-                    // Preload object URLs in background
+                    // Preload object URLs in background and track which are in IndexedDB
                     Promise.all(this.playlist.map(async (t) => {
                         if (t.id) {
                             t.url = await this.db.getObjectUrl(t.id);
+                            // If we got a URL, it means the file is in IndexedDB
+                            if (t.url) {
+                                this.db.indexedDBKeys.add(t.id);
+                            }
                         }
                     })).then(() => {
                         this.renderPlaylist();
                         // Load the first track if there are tracks
                         if (this.playlist.length > 0) {
                             this.loadTrack(0);
+                            // Ensure the audio element is ready for playback
+                            this.audio.load();
                         }
                         // Fetch durations for tracks that don't have it yet
                         this.playlist.forEach(t => {
@@ -2790,6 +2818,8 @@ class MusicPlayer {
                                 this.preloadTrackMetadata(t).catch(() => {});
                             }
                         });
+                        // Update storage status after loading
+                        this.updateStorageStatus();
                     }).catch(() => {});
                 }
                 
