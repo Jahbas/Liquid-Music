@@ -200,10 +200,16 @@ class MusicDB {
 
     getFile(id) {
         return new Promise((resolve, reject) => {
+            console.log('getFile called for ID:', id);
+            console.log('Fallback keys:', Array.from(this.fallbackKeys));
+            console.log('IndexedDB keys:', Array.from(this.indexedDBKeys));
+            
             // Check fallback storage first
             if (this.fallbackKeys.has(id)) {
                 console.log('Getting file from fallback storage:', id);
-                resolve(this.fallbackStorage.get(id) || null);
+                const file = this.fallbackStorage.get(id);
+                console.log('Fallback file found:', file ? 'YES' : 'NO', 'Size:', file ? file.size : 'N/A');
+                resolve(file || null);
                 return;
             }
             
@@ -214,7 +220,10 @@ class MusicDB {
                     console.log('Getting file from localStorage:', id);
                     // Convert data URL back to blob
                     const response = fetch(localStorageData);
-                    response.then(res => res.blob()).then(blob => resolve(blob));
+                    response.then(res => res.blob()).then(blob => {
+                        console.log('localStorage blob retrieved, size:', blob.size);
+                        resolve(blob);
+                    });
                     return;
                 }
             } catch (e) {
@@ -223,19 +232,30 @@ class MusicDB {
             
             // Try IndexedDB
             if (this.db) {
+                console.log('Trying IndexedDB for ID:', id);
                 const tx = this.db.transaction('tracks', 'readonly');
                 const store = tx.objectStore('tracks');
                 const req = store.get(id);
-                req.onsuccess = () => resolve(req.result?.blob || null);
-                req.onerror = () => reject(req.error);
+                req.onsuccess = () => {
+                    const result = req.result?.blob || null;
+                    console.log('IndexedDB result for ID:', id, 'Found:', result ? 'YES' : 'NO', 'Size:', result ? result.size : 'N/A');
+                    resolve(result);
+                };
+                req.onerror = () => {
+                    console.log('IndexedDB error for ID:', id, req.error);
+                    reject(req.error);
+                };
             } else {
+                console.log('IndexedDB not available for ID:', id);
                 resolve(null);
             }
         });
     }
 
     async getObjectUrl(id) {
+        console.log('Getting object URL for ID:', id);
         const blob = await this.getFile(id);
+        console.log('Retrieved blob for ID:', id, 'Blob size:', blob ? blob.size : 'null');
         return blob ? URL.createObjectURL(blob) : null;
     }
 
