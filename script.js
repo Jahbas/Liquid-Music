@@ -2728,7 +2728,7 @@ class MusicPlayer {
         const themeNames = {
             'glass': 'Glass',
             'dark': 'Dark', 
-            'light': 'Light',
+            'light': 'Midnight',
             'purple': 'Purple'
         };
         const themeName = themeNames[theme] || theme;

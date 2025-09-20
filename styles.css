@@ -2270,13 +2270,13 @@ body[data-theme="dark"] {
     --accent-gradient: linear-gradient(45deg, #3a3a3a, #2a2a2a);
 }
 
-/* Light Theme - Beautiful bright design with glass effects */
+/* Midnight Theme - Dark blue/teal design with glass effects */
 body[data-theme="light"] {
-    --primary-bg: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
-    --primary-color: #64748b;
-    --primary-gradient: linear-gradient(45deg, #f1f5f9, #e2e8f0);
-    --secondary-gradient: linear-gradient(45deg, #cbd5e1, #94a3b8);
-    --accent-gradient: linear-gradient(45deg, #3b82f6, #1d4ed8);
+    --primary-bg: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+    --primary-color: #0ea5e9;
+    --primary-gradient: linear-gradient(45deg, #0ea5e9, #0284c7);
+    --secondary-gradient: linear-gradient(45deg, #06b6d4, #0891b2);
+    --accent-gradient: linear-gradient(45deg, #14b8a6, #0d9488);
 }
 
 /* Purple Theme - Vibrant purple/blue design */
@@ -2312,17 +2312,17 @@ body[data-theme="dark"] .gradient-orb.orb-3 {
     background: linear-gradient(45deg, #3a3a3a, #2a2a2a);
 }
 
-/* Light Theme Orbs */
+/* Midnight Theme Orbs */
 body[data-theme="light"] .gradient-orb.orb-1 {
-    background: linear-gradient(45deg, #f1f5f9, #e2e8f0);
+    background: linear-gradient(45deg, #0ea5e9, #0284c7);
 }
 
 body[data-theme="light"] .gradient-orb.orb-2 {
-    background: linear-gradient(45deg, #cbd5e1, #94a3b8);
+    background: linear-gradient(45deg, #06b6d4, #0891b2);
 }
 
 body[data-theme="light"] .gradient-orb.orb-3 {
-    background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+    background: linear-gradient(45deg, #14b8a6, #0d9488);
 }
 
 /* Purple Theme Orbs */
@@ -2346,7 +2346,7 @@ body[data-theme="dark"] .logo i {
 }
 
 body[data-theme="light"] .logo i {
-    background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+    background: linear-gradient(45deg, #0ea5e9, #14b8a6);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -2500,211 +2500,211 @@ body[data-theme="dark"] .volume-percent {
     color: rgba(180, 180, 180, 0.8) !important;
 }
 
-/* ===== LIGHT THEME STYLES ===== */
+/* ===== MIDNIGHT THEME STYLES ===== */
 
-/* Light theme progress bars and volume sliders */
+/* Midnight theme progress bars and volume sliders */
 body[data-theme="light"] .progress {
-    background: linear-gradient(180deg, rgba(59, 130, 246, 0.95), rgba(29, 78, 216, 0.8));
-    box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.3), 0 6px 14px rgba(59, 130, 246, 0.4);
+    background: linear-gradient(180deg, rgba(14, 165, 233, 0.95), rgba(2, 132, 199, 0.8));
+    box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.2), 0 6px 14px rgba(14, 165, 233, 0.4);
 }
 
 body[data-theme="light"] .volume-progress {
-    background: linear-gradient(180deg, rgba(59, 130, 246, 0.95), rgba(29, 78, 216, 0.8));
-    box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.3), 0 4px 10px rgba(59, 130, 246, 0.4);
+    background: linear-gradient(180deg, rgba(14, 165, 233, 0.95), rgba(2, 132, 199, 0.8));
+    box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.2), 0 4px 10px rgba(14, 165, 233, 0.4);
 }
 
 body[data-theme="light"] .progress-bar {
-    background: rgba(255, 255, 255, 0.4) !important;
+    background: rgba(20, 184, 166, 0.4) !important;
 }
 
 body[data-theme="light"] .volume-bar {
-    background: rgba(255, 255, 255, 0.4) !important;
+    background: rgba(20, 184, 166, 0.4) !important;
 }
 
 body[data-theme="light"] .progress-handle {
-    background: radial-gradient(circle at 30% 30%, #ffffff 0%, #e2e8f0 60%, #cbd5e1 100%) !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 0 10px rgba(59, 130, 246, 0.6) !important;
+    background: radial-gradient(circle at 30% 30%, #ffffff 0%, #e0f2fe 60%, #bae6fd 100%) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 10px rgba(14, 165, 233, 0.6) !important;
 }
 
 body[data-theme="light"] .volume-handle {
-    background: radial-gradient(circle at 30% 30%, #ffffff 0%, #e2e8f0 60%, #cbd5e1 100%) !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2), 0 0 8px rgba(59, 130, 246, 0.6) !important;
+    background: radial-gradient(circle at 30% 30%, #ffffff 0%, #e0f2fe 60%, #bae6fd 100%) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), 0 0 8px rgba(14, 165, 233, 0.6) !important;
 }
 
 body[data-theme="light"] .volume-percentage {
-    color: rgba(30, 41, 59, 0.8) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
 }
 
 body[data-theme="light"] .volume-percentage:hover {
-    color: rgba(15, 23, 42, 0.9) !important;
+    color: rgba(255, 255, 255, 1) !important;
 }
 
-/* Light theme playlist styles */
+/* Midnight theme playlist styles */
 body[data-theme="light"] .playlist-tab.active {
-    background: linear-gradient(45deg, rgba(59, 130, 246, 0.2), rgba(29, 78, 216, 0.1));
-    border: 2px solid rgba(59, 130, 246, 0.6);
+    background: linear-gradient(45deg, rgba(14, 165, 233, 0.2), rgba(2, 132, 199, 0.1));
+    border: 2px solid rgba(14, 165, 233, 0.6);
     box-shadow: 
-        0 0 0 2px rgba(59, 130, 246, 0.4),
-        0 0 0 4px rgba(59, 130, 246, 0.2),
-        0 8px 25px rgba(59, 130, 246, 0.3);
+        0 0 0 2px rgba(14, 165, 233, 0.4),
+        0 0 0 4px rgba(14, 165, 233, 0.2),
+        0 8px 25px rgba(14, 165, 233, 0.3);
 }
 
 body[data-theme="light"] .playlist-item.active {
-    background: linear-gradient(45deg, rgba(59, 130, 246, 0.2), rgba(29, 78, 216, 0.1));
-    border-color: rgba(59, 130, 246, 0.7);
+    background: linear-gradient(45deg, rgba(14, 165, 233, 0.2), rgba(2, 132, 199, 0.1));
+    border-color: rgba(14, 165, 233, 0.7);
 }
 
-/* Light theme buttons */
+/* Midnight theme buttons */
 body[data-theme="light"] .btn-primary {
-    background: linear-gradient(180deg, rgba(59, 130, 246, 0.95), rgba(29, 78, 216, 0.8));
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+    background: linear-gradient(180deg, rgba(14, 165, 233, 0.95), rgba(2, 132, 199, 0.8));
+    box-shadow: 0 4px 15px rgba(14, 165, 233, 0.2);
 }
 
 body[data-theme="light"] .btn-primary:hover {
-    background: linear-gradient(180deg, rgba(59, 130, 246, 1), rgba(29, 78, 216, 0.9));
-    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+    background: linear-gradient(180deg, rgba(14, 165, 233, 1), rgba(2, 132, 199, 0.9));
+    box-shadow: 0 8px 25px rgba(14, 165, 233, 0.3);
 }
 
 body[data-theme="light"] .settings-toggle,
 body[data-theme="light"] .artists-btn,
 body[data-theme="light"] .logs-btn,
 body[data-theme="light"] .discord-btn {
-    background: linear-gradient(180deg, rgba(59, 130, 246, 0.95), rgba(29, 78, 216, 0.8));
-    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+    background: linear-gradient(180deg, rgba(14, 165, 233, 0.95), rgba(2, 132, 199, 0.8));
+    box-shadow: 0 8px 25px rgba(14, 165, 233, 0.2);
 }
 
 body[data-theme="light"] .settings-toggle:hover,
 body[data-theme="light"] .artists-btn:hover,
 body[data-theme="light"] .logs-btn:hover,
 body[data-theme="light"] .discord-btn:hover {
-    box-shadow: 0 15px 35px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 15px 35px rgba(14, 165, 233, 0.3);
 }
 
 body[data-theme="light"] .theme-btn.active {
-    background: linear-gradient(45deg, rgba(59, 130, 246, 0.2), rgba(29, 78, 216, 0.1));
-    border-color: rgba(59, 130, 246, 0.4);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+    background: linear-gradient(45deg, rgba(14, 165, 233, 0.2), rgba(2, 132, 199, 0.1));
+    border-color: rgba(14, 165, 233, 0.4);
+    box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.3);
 }
 
 body[data-theme="light"] .volume-label {
-    color: rgba(30, 41, 59, 0.9) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
 }
 
 body[data-theme="light"] .volume-slider {
-    background: rgba(59, 130, 246, 0.3) !important;
+    background: rgba(14, 165, 233, 0.3) !important;
 }
 
 body[data-theme="light"] .volume-slider::-webkit-slider-thumb {
-    background: linear-gradient(45deg, #3b82f6, #1d4ed8) !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+    background: linear-gradient(45deg, #0ea5e9, #14b8a6) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
 }
 
 body[data-theme="light"] .volume-slider::-webkit-slider-thumb:hover {
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4) !important;
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4) !important;
 }
 
 body[data-theme="light"] .volume-slider::-moz-range-thumb {
-    background: linear-gradient(45deg, #3b82f6, #1d4ed8) !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+    background: linear-gradient(45deg, #0ea5e9, #14b8a6) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
 }
 
 body[data-theme="light"] .volume-slider::-moz-range-thumb:hover {
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4) !important;
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4) !important;
 }
 
 body[data-theme="light"] .volume-value {
-    color: rgba(30, 41, 59, 0.8) !important;
-    background: rgba(255, 255, 255, 0.3) !important;
-    border: 1px solid rgba(59, 130, 246, 0.3) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    background: rgba(14, 165, 233, 0.3) !important;
+    border: 1px solid rgba(14, 165, 233, 0.3) !important;
 }
 
 body[data-theme="light"] .volume-input {
-    background: rgba(255, 255, 255, 0.3) !important;
-    border: 1px solid rgba(59, 130, 246, 0.3) !important;
-    color: rgba(30, 41, 59, 0.9) !important;
+    background: rgba(14, 165, 233, 0.3) !important;
+    border: 1px solid rgba(14, 165, 233, 0.3) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
 }
 
 body[data-theme="light"] .volume-input:focus {
-    border-color: rgba(59, 130, 246, 0.6) !important;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
-    background: rgba(255, 255, 255, 0.4) !important;
+    border-color: rgba(14, 165, 233, 0.6) !important;
+    box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2) !important;
+    background: rgba(14, 165, 233, 0.4) !important;
 }
 
 body[data-theme="light"] .volume-input:hover {
-    border-color: rgba(59, 130, 246, 0.4) !important;
-    background: rgba(255, 255, 255, 0.35) !important;
+    border-color: rgba(14, 165, 233, 0.4) !important;
+    background: rgba(14, 165, 233, 0.35) !important;
 }
 
 body[data-theme="light"] .volume-percent {
-    color: rgba(30, 41, 59, 0.8) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
 }
 
-/* Light theme artist styles */
+/* Midnight theme artist styles */
 body[data-theme="light"] .artist-item {
-    background: rgba(255, 255, 255, 0.2) !important;
-    border: 1px solid rgba(59, 130, 246, 0.2) !important;
+    background: rgba(14, 165, 233, 0.2) !important;
+    border: 1px solid rgba(14, 165, 233, 0.2) !important;
 }
 
 body[data-theme="light"] .artist-item:hover {
-    background: rgba(59, 130, 246, 0.3) !important;
-    border-color: rgba(59, 130, 246, 0.4) !important;
+    background: rgba(14, 165, 233, 0.3) !important;
+    border-color: rgba(14, 165, 233, 0.4) !important;
 }
 
 body[data-theme="light"] .artist-avatar {
-    background: linear-gradient(45deg, rgba(59, 130, 246, 0.3), rgba(29, 78, 216, 0.1)) !important;
-    color: rgba(30, 41, 59, 0.8) !important;
-    border: 2px solid rgba(59, 130, 246, 0.3) !important;
+    background: linear-gradient(45deg, rgba(14, 165, 233, 0.3), rgba(2, 132, 199, 0.1)) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    border: 2px solid rgba(14, 165, 233, 0.3) !important;
 }
 
 body[data-theme="light"] .artist-initial {
-    color: rgba(30, 41, 59, 0.8) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
 }
 
 body[data-theme="light"] .artist-name {
-    color: rgba(15, 23, 42, 0.9) !important;
+    color: rgba(255, 255, 255, 0.95) !important;
 }
 
 body[data-theme="light"] .artist-count {
-    color: rgba(30, 41, 59, 0.7) !important;
+    color: rgba(255, 255, 255, 0.8) !important;
 }
 
 body[data-theme="light"] .artist-albums {
-    color: rgba(30, 41, 59, 0.7) !important;
+    color: rgba(255, 255, 255, 0.8) !important;
 }
 
 body[data-theme="light"] .artist-album-list {
-    color: rgba(30, 41, 59, 0.5) !important;
+    color: rgba(255, 255, 255, 0.6) !important;
 }
 
 body[data-theme="light"] .artist-action {
-    background: rgba(59, 130, 246, 0.1) !important;
-    color: rgba(30, 41, 59, 0.8) !important;
+    background: rgba(14, 165, 233, 0.1) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
 }
 
 body[data-theme="light"] .artist-item:hover .artist-action {
-    background: rgba(59, 130, 246, 0.2) !important;
+    background: rgba(14, 165, 233, 0.2) !important;
 }
 
-/* Light theme collapse button */
+/* Midnight theme collapse button */
 body[data-theme="light"] .collapse-btn {
-    background: linear-gradient(180deg, rgba(59, 130, 246, 0.95), rgba(29, 78, 216, 0.8)) !important;
-    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2) !important;
+    background: linear-gradient(180deg, rgba(14, 165, 233, 0.95), rgba(2, 132, 199, 0.8)) !important;
+    box-shadow: 0 8px 25px rgba(14, 165, 233, 0.2) !important;
 }
 
 body[data-theme="light"] .collapse-btn:hover {
-    background: linear-gradient(180deg, rgba(59, 130, 246, 1), rgba(29, 78, 216, 0.9)) !important;
-    box-shadow: 0 15px 35px rgba(59, 130, 246, 0.3) !important;
+    background: linear-gradient(180deg, rgba(14, 165, 233, 1), rgba(2, 132, 199, 0.9)) !important;
+    box-shadow: 0 15px 35px rgba(14, 165, 233, 0.3) !important;
 }
 
 body[data-theme="light"] .set-default-btn {
-    background: linear-gradient(45deg, rgba(59, 130, 246, 0.3), rgba(29, 78, 216, 0.3)) !important;
-    border: 1px solid rgba(59, 130, 246, 0.4) !important;
-    color: rgba(30, 41, 59, 0.9) !important;
+    background: linear-gradient(45deg, rgba(14, 165, 233, 0.3), rgba(2, 132, 199, 0.3)) !important;
+    border: 1px solid rgba(14, 165, 233, 0.4) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
 }
 
 body[data-theme="light"] .set-default-btn:hover {
-    background: linear-gradient(45deg, rgba(59, 130, 246, 0.4), rgba(29, 78, 216, 0.4)) !important;
-    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3) !important;
+    background: linear-gradient(45deg, rgba(14, 165, 233, 0.4), rgba(2, 132, 199, 0.4)) !important;
+    box-shadow: 0 8px 25px rgba(14, 165, 233, 0.3) !important;
 }
 
 /* ===== PURPLE THEME STYLES ===== */
@@ -2912,6 +2912,120 @@ body[data-theme="purple"] .set-default-btn {
 body[data-theme="purple"] .set-default-btn:hover {
     background: linear-gradient(45deg, rgba(139, 92, 246, 0.4), rgba(124, 58, 237, 0.4)) !important;
     box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3) !important;
+}
+
+/* ===== THEME-SPECIFIC PLAY BUTTONS ===== */
+
+/* Midnight theme play button */
+body[data-theme="light"] .play-btn {
+    background: linear-gradient(180deg, rgba(14, 165, 233, 0.95), rgba(2, 132, 199, 0.8)) !important;
+    border: 2px solid rgba(14, 165, 233, 0.6) !important;
+    box-shadow: 
+        0 0 0 2px rgba(14, 165, 233, 0.4),
+        0 0 0 4px rgba(14, 165, 233, 0.2),
+        0 8px 25px rgba(14, 165, 233, 0.35);
+    transition: all 0.3s ease;
+}
+
+body[data-theme="light"] .play-btn:hover {
+    background: linear-gradient(180deg, rgba(14, 165, 233, 1), rgba(2, 132, 199, 0.9)) !important;
+    border: 2px solid rgba(14, 165, 233, 0.8) !important;
+    box-shadow: 
+        0 0 0 2px rgba(14, 165, 233, 0.6),
+        0 0 0 4px rgba(14, 165, 233, 0.3),
+        0 15px 35px rgba(14, 165, 233, 0.5);
+    transform: translateY(-5px) scale(1.15);
+}
+
+/* Purple theme play button */
+body[data-theme="purple"] .play-btn {
+    background: linear-gradient(180deg, rgba(139, 92, 246, 0.95), rgba(124, 58, 237, 0.8)) !important;
+    border: 2px solid rgba(139, 92, 246, 0.6) !important;
+    box-shadow: 
+        0 0 0 2px rgba(139, 92, 246, 0.4),
+        0 0 0 4px rgba(139, 92, 246, 0.2),
+        0 8px 25px rgba(139, 92, 246, 0.35);
+    transition: all 0.3s ease;
+}
+
+body[data-theme="purple"] .play-btn:hover {
+    background: linear-gradient(180deg, rgba(139, 92, 246, 1), rgba(124, 58, 237, 0.9)) !important;
+    border: 2px solid rgba(139, 92, 246, 0.8) !important;
+    box-shadow: 
+        0 0 0 2px rgba(139, 92, 246, 0.6),
+        0 0 0 4px rgba(139, 92, 246, 0.3),
+        0 15px 35px rgba(139, 92, 246, 0.5);
+    transform: translateY(-5px) scale(1.15);
+}
+
+/* ===== THEME-SPECIFIC UPLOAD BUTTONS ===== */
+
+/* Midnight theme upload buttons */
+body[data-theme="light"] .upload-btn {
+    background: rgba(14, 165, 233, 0.2) !important;
+    border: 2px solid rgba(14, 165, 233, 0.4) !important;
+}
+
+body[data-theme="light"] .upload-btn:hover {
+    background: rgba(14, 165, 233, 0.3) !important;
+    border-color: rgba(14, 165, 233, 0.6) !important;
+    transform: translateY(-2px);
+}
+
+/* Purple theme upload buttons */
+body[data-theme="purple"] .upload-btn {
+    background: rgba(139, 92, 246, 0.2) !important;
+    border: 2px solid rgba(139, 92, 246, 0.4) !important;
+}
+
+body[data-theme="purple"] .upload-btn:hover {
+    background: rgba(139, 92, 246, 0.3) !important;
+    border-color: rgba(139, 92, 246, 0.6) !important;
+    transform: translateY(-2px);
+}
+
+/* ===== THEME-SPECIFIC CONTROL BUTTONS ===== */
+
+/* Midnight theme control buttons */
+body[data-theme="light"] .control-btn {
+    background: rgba(14, 165, 233, 0.2) !important;
+}
+
+body[data-theme="light"] .control-btn:hover {
+    background: rgba(14, 165, 233, 0.3) !important;
+    transform: translateY(-3px) scale(1.1);
+    box-shadow: 0 10px 25px rgba(14, 165, 233, 0.3);
+}
+
+body[data-theme="light"] .control-btn.active {
+    background: linear-gradient(45deg, #0ea5e9, #14b8a6) !important;
+    color: #ffffff !important;
+    border: 2px solid rgba(14, 165, 233, 0.8) !important;
+    box-shadow: 
+        0 0 0 2px rgba(14, 165, 233, 0.4),
+        0 0 0 4px rgba(14, 165, 233, 0.2),
+        0 8px 25px rgba(14, 165, 233, 0.3);
+}
+
+/* Purple theme control buttons */
+body[data-theme="purple"] .control-btn {
+    background: rgba(139, 92, 246, 0.2) !important;
+}
+
+body[data-theme="purple"] .control-btn:hover {
+    background: rgba(139, 92, 246, 0.3) !important;
+    transform: translateY(-3px) scale(1.1);
+    box-shadow: 0 10px 25px rgba(139, 92, 246, 0.3);
+}
+
+body[data-theme="purple"] .control-btn.active {
+    background: linear-gradient(45deg, #8b5cf6, #ec4899) !important;
+    color: #ffffff !important;
+    border: 2px solid rgba(139, 92, 246, 0.8) !important;
+    box-shadow: 
+        0 0 0 2px rgba(139, 92, 246, 0.4),
+        0 0 0 4px rgba(139, 92, 246, 0.2),
+        0 8px 25px rgba(139, 92, 246, 0.3);
 }
 
 body[data-theme="dark"] .artist-item {
