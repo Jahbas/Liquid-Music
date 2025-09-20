@@ -91,6 +91,13 @@ class MusicDB {
                 tx.oncomplete = () => {
                     console.log('IndexedDB transaction completed successfully');
                     this.indexedDBKeys.add(id);
+                    console.log('File successfully saved to IndexedDB:', id);
+                    
+                    // Test if the file can actually be retrieved (verify persistence)
+                    setTimeout(() => {
+                        this.testFilePersistence(id);
+                    }, 100);
+                    
                     clearTimeout(timeout);
                     resolve(id);
                 };
@@ -137,6 +144,22 @@ class MusicDB {
             localStorage.removeItem(key);
         });
         console.log(`Cleared ${toRemove.length} old localStorage entries`);
+    }
+    
+    async testFilePersistence(id) {
+        try {
+            const blob = await this.getFile(id);
+            if (blob) {
+                console.log('✅ File persistence test PASSED for:', id);
+            } else {
+                console.log('❌ File persistence test FAILED for:', id);
+                // Remove from persistent count if it can't be retrieved
+                this.indexedDBKeys.delete(id);
+            }
+        } catch (e) {
+            console.log('❌ File persistence test ERROR for:', id, e);
+            this.indexedDBKeys.delete(id);
+        }
     }
     
     useFallbackStorage(id, file, resolve) {
