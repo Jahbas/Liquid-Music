@@ -1,0 +1,45 @@
+{
+  "name": "liquid-music",
+  "version": "0.1.1",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jahbas/Liquid-Music.git"
+  },
+  "homepage": "https://github.com/Jahbas/Liquid-Music#readme",
+  "bugs": {
+    "url": "https://github.com/Jahbas/Liquid-Music/issues"
+  },
+  "description": "Liquid Music web app packaged for npm with a simple CLI server.",
+  "bin": {
+    "liquid-music": "bin/liquid-music.js"
+  },
+  "type": "module",
+  "scripts": {
+    "start": "node bin/liquid-music.js"
+  },
+  "keywords": [
+    "music",
+    "audio",
+    "webapp",
+    "liquid-music"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "bin/",
+    "index.html",
+    "script.js",
+    "styles.css",
+    "README.md",
+    "METADATA_README.md",
+    "server.py",
+    "metadata_reader.py",
+    "requirements.txt",
+    "start.bat"
+  ]
+}
+
+
