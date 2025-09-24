@@ -2643,20 +2643,66 @@ class MusicPlayer {
 
     async runVersionCheck(force) {
         try {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 4000);
-            const res = await fetch('/version', { signal: controller.signal, cache: 'no-store' });
-            clearTimeout(timeout);
-            if (!res.ok) throw new Error('Network error');
-            const data = await res.json();
+            const current = 'v5.1.0'; // Current version from HTML comment
+            let latest = null;
+            let update = false;
 
-            const current = data.current || 'unknown';
-            const latest = data.latest || null;
-            const update = !!data.update_available;
+            // Try to fetch latest version from GitHub
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 5000);
+                
+                // Try local server first (for development)
+                let res;
+                try {
+                    res = await fetch('/version', { signal: controller.signal, cache: 'no-store' });
+                } catch (localError) {
+                    // If local server fails, try GitHub directly
+                    res = await fetch('https://raw.githubusercontent.com/Jahbas/Liquid-Music/main/README.md', { 
+                        signal: controller.signal, 
+                        cache: 'no-store',
+                        headers: { 'User-Agent': 'Liquid-Music-Updater' }
+                    });
+                }
+                
+                clearTimeout(timeout);
+                
+                if (res.ok) {
+                    if (res.url.includes('github.com')) {
+                        // Parse GitHub README for version
+                        const text = await res.text();
+                        const patterns = [
+                            /Version:\s*v(\d+\.\d+\.\d+(?:\.\d+)?)/i,
+                            /Version-(\d+\.\d+\.\d+(?:\.\d+)?)/i,
+                            /Version[\s:-]*v(\d+\.\d+\.\d+(?:\.\d+)?)/i
+                        ];
+                        
+                        for (const pattern of patterns) {
+                            const match = text.match(pattern);
+                            if (match) {
+                                latest = `v${match[1]}`;
+                                break;
+                            }
+                        }
+                    } else {
+                        // Local server response
+                        const data = await res.json();
+                        latest = data.latest;
+                        update = !!data.update_available;
+                    }
+                }
+            } catch (fetchError) {
+                console.warn('Version fetch failed:', fetchError);
+            }
 
-                if (update) {
-                    this.showVersionBanner(`Update available: ${latest} (current ${current})`, 'fa-bell', true);
-                } else {
+            // Compare versions if we got latest
+            if (latest && latest !== current) {
+                update = true;
+            }
+
+            if (update) {
+                this.showVersionBanner(`Update available: ${latest} (current ${current})`, 'fa-bell', true);
+            } else {
                 this.showVersionBanner(`Version ${current}`, 'fa-check', false);
             }
 
@@ -2664,7 +2710,8 @@ class MusicPlayer {
                 if (update) this.showNotification(`Update available: ${latest}`, 'fa-bell');
                 else this.showNotification('You are up to date', 'fa-check');
             }
-        } catch (_) {
+        } catch (error) {
+            console.warn('Version check failed:', error);
             this.showVersionBanner('Version check failed', 'fa-exclamation-triangle', true);
             if (force) this.showNotification('Version check failed', 'fa-exclamation-triangle');
         }
@@ -3315,47 +3362,260 @@ class MusicPlayer {
         }
     }
 
-    // Extract metadata using Python backend
+    // Extract metadata using Web APIs (client-side) with Python backend fallback
     async extractMetadataFromPython(file) {
         try {
-            // Send request to Python backend
-            const response = await fetch('/extract-metadata', {
-                method: 'POST',
-                headers: {
-                    'X-Filename': file.name
-                },
-                body: file  // Send the file directly as binary data
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            // First try Python backend if available (for local development)
+            try {
+                const response = await fetch('/extract-metadata', {
+                    method: 'POST',
+                    headers: {
+                        'X-Filename': file.name
+                    },
+                    body: file
+                });
+                
+                if (response.ok) {
+                    const metadata = await response.json();
+                    if (!metadata.error) {
+                        return {
+                            title: metadata.title,
+                            artist: metadata.artist,
+                            album: metadata.album,
+                            year: metadata.year,
+                            genre: metadata.genre,
+                            track_number: metadata.track_number,
+                            duration: metadata.duration,
+                            extraction_method: metadata.extraction_method,
+                            album_art: metadata.album_art,
+                            album_art_mime: metadata.album_art_mime
+                        };
+                    }
+                }
+            } catch (backendError) {
+                console.log('Python backend not available, using client-side extraction');
             }
-            
-            const metadata = await response.json();
-            
-            // Check if extraction was successful
-            if (metadata.error) {
-                return null;
-            }
-            
-            // Return the extracted metadata
-            return {
-                title: metadata.title,
-                artist: metadata.artist,
-                album: metadata.album,
-                year: metadata.year,
-                genre: metadata.genre,
-                track_number: metadata.track_number,
-                duration: metadata.duration,
-                extraction_method: metadata.extraction_method,
-                album_art: metadata.album_art,
-                album_art_mime: metadata.album_art_mime
-            };
-            
+
+            // Fallback to client-side metadata extraction
+            return await this.extractMetadataClientSide(file);
         } catch (error) {
-            console.error('Error calling Python metadata extractor:', error);
+            console.warn('Metadata extraction failed:', error);
             return null;
         }
+    }
+
+    // Client-side metadata extraction using Web APIs
+    async extractMetadataClientSide(file) {
+        try {
+            const metadata = {
+                title: null,
+                artist: null,
+                album: null,
+                year: null,
+                genre: null,
+                track_number: null,
+                duration: null,
+                album_art: null,
+                album_art_mime: null,
+                file_name: file.name,
+                file_size: file.size,
+                extraction_method: 'client-side'
+            };
+
+            // Create audio element to get duration
+            const audio = new Audio();
+            const durationPromise = new Promise((resolve) => {
+                audio.addEventListener('loadedmetadata', () => {
+                    resolve(audio.duration || 0);
+                });
+                audio.addEventListener('error', () => resolve(0));
+                // Timeout after 5 seconds
+                setTimeout(() => resolve(0), 5000);
+            });
+
+            // Load file for duration
+            audio.src = URL.createObjectURL(file);
+            metadata.duration = await durationPromise;
+            URL.revokeObjectURL(audio.src);
+
+            // Try to extract metadata from filename
+            const filenameMetadata = this.parseFilenameMetadata(file.name);
+            Object.assign(metadata, filenameMetadata);
+
+            // Try to extract ID3 tags if it's an MP3 file
+            if (file.name.toLowerCase().endsWith('.mp3')) {
+                try {
+                    const id3Metadata = await this.extractID3Tags(file);
+                    if (id3Metadata) {
+                        Object.assign(metadata, id3Metadata);
+                    }
+                } catch (id3Error) {
+                    console.log('ID3 extraction failed:', id3Error);
+                }
+            }
+
+            return metadata;
+        } catch (error) {
+            console.warn('Client-side metadata extraction failed:', error);
+            return null;
+        }
+    }
+
+    // Parse metadata from filename
+    parseFilenameMetadata(filename) {
+        const nameWithoutExt = filename.replace(/\.[^/.]+$/, "");
+        const metadata = {};
+
+        // Common patterns: "Artist - Song Title", "Artist - Album - Song Title", etc.
+        const patterns = [
+            /^(.+?)\s*-\s*(.+?)\s*-\s*(.+?)\s*\((\d{4})\)$/, // Artist - Album - Song (Year)
+            /^(.+?)\s*-\s*(.+?)\s*-\s*(.+?)\s*\[(\d{4})\]$/, // Artist - Album - Song [Year]
+            /^(.+?)\s*-\s*(.+?)\s*-\s*(.+)$/, // Artist - Album - Song
+            /^(.+?)\s*-\s*(.+?)\s*\((\d{4})\)$/, // Artist - Song (Year)
+            /^(.+?)\s*-\s*(.+?)\s*\[(\d{4})\]$/, // Artist - Song [Year]
+            /^(.+?)\s*-\s*(.+)$/, // Artist - Song
+            /^(.+?)_(.+)$/ // Artist_Song
+        ];
+
+        for (const pattern of patterns) {
+            const match = nameWithoutExt.match(pattern);
+            if (match) {
+                const groups = match.slice(1);
+                if (groups.length === 2) {
+                    metadata.artist = groups[0].trim();
+                    metadata.title = groups[1].trim();
+                } else if (groups.length === 3) {
+                    if (/\d{4}/.test(groups[2])) {
+                        // Has year
+                        metadata.artist = groups[0].trim();
+                        metadata.title = groups[1].trim();
+                        metadata.year = groups[2].trim();
+                    } else {
+                        // Has album
+                        metadata.artist = groups[0].trim();
+                        metadata.album = groups[1].trim();
+                        metadata.title = groups[2].trim();
+                    }
+                } else if (groups.length === 4) {
+                    metadata.artist = groups[0].trim();
+                    metadata.album = groups[1].trim();
+                    metadata.title = groups[2].trim();
+                    metadata.year = groups[3].trim();
+                }
+                break;
+            }
+        }
+
+        // If no pattern matched, use the whole filename as title
+        if (!metadata.title) {
+            metadata.title = nameWithoutExt;
+        }
+
+        return metadata;
+    }
+
+    // Extract ID3 tags from MP3 files (basic implementation)
+    async extractID3Tags(file) {
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const uint8Array = new Uint8Array(arrayBuffer);
+            
+            // Look for ID3v2 tag (starts with "ID3")
+            let offset = 0;
+            while (offset < uint8Array.length - 10) {
+                if (uint8Array[offset] === 0x49 && uint8Array[offset + 1] === 0x44 && uint8Array[offset + 2] === 0x33) {
+                    // Found ID3v2 tag
+                    const tagSize = ((uint8Array[offset + 6] & 0x7F) << 21) |
+                                   ((uint8Array[offset + 7] & 0x7F) << 14) |
+                                   ((uint8Array[offset + 8] & 0x7F) << 7) |
+                                   (uint8Array[offset + 9] & 0x7F);
+                    
+                    const tagData = uint8Array.slice(offset + 10, offset + 10 + tagSize);
+                    return this.parseID3v2Tag(tagData);
+                }
+                offset++;
+            }
+            
+            return null;
+        } catch (error) {
+            console.warn('ID3 tag extraction failed:', error);
+            return null;
+        }
+    }
+
+    // Parse ID3v2 tag data (simplified)
+    parseID3v2Tag(tagData) {
+        const metadata = {};
+        let offset = 0;
+
+        while (offset < tagData.length - 10) {
+            // Read frame header
+            const frameId = String.fromCharCode(...tagData.slice(offset, offset + 4));
+            const frameSize = (tagData[offset + 4] << 24) | 
+                             (tagData[offset + 5] << 16) | 
+                             (tagData[offset + 6] << 8) | 
+                             tagData[offset + 7];
+            
+            if (frameSize <= 0 || frameSize > tagData.length - offset - 10) {
+                break;
+            }
+
+            const frameData = tagData.slice(offset + 10, offset + 10 + frameSize);
+            
+            // Parse common frames
+            switch (frameId) {
+                case 'TIT2': // Title
+                    metadata.title = this.decodeID3Text(frameData);
+                    break;
+                case 'TPE1': // Artist
+                    metadata.artist = this.decodeID3Text(frameData);
+                    break;
+                case 'TALB': // Album
+                    metadata.album = this.decodeID3Text(frameData);
+                    break;
+                case 'TYER': // Year
+                case 'TDRC': // Date
+                    metadata.year = this.decodeID3Text(frameData);
+                    break;
+                case 'TCON': // Genre
+                    metadata.genre = this.decodeID3Text(frameData);
+                    break;
+                case 'TRCK': // Track number
+                    metadata.track_number = this.decodeID3Text(frameData);
+                    break;
+            }
+            
+            offset += 10 + frameSize;
+        }
+
+        return metadata;
+    }
+
+    // Decode ID3 text frame
+    decodeID3Text(frameData) {
+        if (frameData.length === 0) return '';
+        
+        // Skip encoding byte (first byte)
+        const encoding = frameData[0];
+        const textData = frameData.slice(1);
+        
+        try {
+            if (encoding === 0 || encoding === 3) {
+                // ISO-8859-1 or UTF-8
+                return new TextDecoder('utf-8').decode(textData).replace(/\0/g, '');
+            } else if (encoding === 1) {
+                // UTF-16 with BOM
+                return new TextDecoder('utf-16').decode(textData).replace(/\0/g, '');
+            } else if (encoding === 2) {
+                // UTF-16BE without BOM
+                return new TextDecoder('utf-16be').decode(textData).replace(/\0/g, '');
+            }
+        } catch (error) {
+            // Fallback to simple string conversion
+            return String.fromCharCode(...textData).replace(/\0/g, '');
+        }
+        
+        return String.fromCharCode(...textData).replace(/\0/g, '');
     }
 }
 
