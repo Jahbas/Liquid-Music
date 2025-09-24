@@ -2643,7 +2643,7 @@ class MusicPlayer {
 
     async runVersionCheck(force) {
         try {
-            const current = 'v5.1.0'; // Current version from HTML comment
+            const current = 'v5.2.0'; // Current version from HTML comment
             let latest = null;
             let update = false;
 
@@ -2674,8 +2674,8 @@ class MusicPlayer {
                         console.log('GitHub README content preview:', text.substring(0, 500));
                         
                         const patterns = [
-                            /Version:\s*v(\d+\.\d+\.\d+(?:\.\d+)?)/i,  // Version: v5.1.0
-                            /Version-(\d+\.\d+\.\d+(?:\.\d+)?)/i,      // Version-5.1.0 (badge)
+                            /Version:\s*v(\d+\.\d+\.\d+(?:\.\d+)?)/i,  // Version: v5.2.0
+                            /Version-(\d+\.\d+\.\d+(?:\.\d+)?)/i,      // Version-5.2.0 (badge)
                             /Version[\s:-]*v(\d+\.\d+\.\d+(?:\.\d+)?)/i, // General pattern
                             /badge\/Version-(\d+\.\d+\.\d+(?:\.\d+)?)/i, // Badge format
                             /\*\*Version:\s*v(\d+\.\d+\.\d+(?:\.\d+)?)\*\*/i // Markdown bold
@@ -3734,4 +3734,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Version: v5.1.0
+// Version: v5.2.0

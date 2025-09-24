@@ -6,7 +6,7 @@ cd /d "%~dp0"
 
 echo.
 echo ==============================================
-echo   Liquid Glass Music Player v5.1.0
+echo   Liquid Glass Music Player v5.2.0
 echo   Automatic Setup and Startup
 echo ==============================================
 echo.

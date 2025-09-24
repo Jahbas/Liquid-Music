@@ -111,7 +111,7 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def handle_version_info(self):
         """Return current version and attempt to fetch latest version (best-effort)."""
         try:
-            current_version = "v5.1.0"
+            current_version = "v5.2.0"
 
             # Best-effort latest version fetch from GitHub; tolerate offline
             latest_version = None
@@ -131,8 +131,8 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     import re
                     # Try multiple patterns to find the version
                     patterns = [
-                        r"Version:\s*v(\d+\.\d+\.\d+(?:\.\d+)?)",  # Version: v5.1.0
-                        r"Version-(\d+\.\d+\.\d+(?:\.\d+)?)",      # Version-5.1.0 (badge)
+                        r"Version:\s*v(\d+\.\d+\.\d+(?:\.\d+)?)",  # Version: v5.2.0
+                        r"Version-(\d+\.\d+\.\d+(?:\.\d+)?)",      # Version-5.2.0 (badge)
                         r"Version[\s:-]*v(\d+\.\d+\.\d+(?:\.\d+)?)" # General pattern
                     ]
                     
@@ -308,4 +308,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-# Version: v5.1.0
+# Version: v5.2.0
