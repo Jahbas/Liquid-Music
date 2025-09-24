@@ -2671,17 +2671,40 @@ class MusicPlayer {
                     if (res.url.includes('github.com')) {
                         // Parse GitHub README for version
                         const text = await res.text();
+                        console.log('GitHub README content preview:', text.substring(0, 500));
+                        
                         const patterns = [
-                            /Version:\s*v(\d+\.\d+\.\d+(?:\.\d+)?)/i,
-                            /Version-(\d+\.\d+\.\d+(?:\.\d+)?)/i,
-                            /Version[\s:-]*v(\d+\.\d+\.\d+(?:\.\d+)?)/i
+                            /Version:\s*v(\d+\.\d+\.\d+(?:\.\d+)?)/i,  // Version: v5.1.0
+                            /Version-(\d+\.\d+\.\d+(?:\.\d+)?)/i,      // Version-5.1.0 (badge)
+                            /Version[\s:-]*v(\d+\.\d+\.\d+(?:\.\d+)?)/i, // General pattern
+                            /badge\/Version-(\d+\.\d+\.\d+(?:\.\d+)?)/i, // Badge format
+                            /\*\*Version:\s*v(\d+\.\d+\.\d+(?:\.\d+)?)\*\*/i // Markdown bold
                         ];
                         
                         for (const pattern of patterns) {
                             const match = text.match(pattern);
                             if (match) {
                                 latest = `v${match[1]}`;
+                                console.log('Found version with pattern:', pattern, '->', latest);
                                 break;
+                            }
+                        }
+                        
+                        if (!latest) {
+                            console.log('No version found in README, trying fallback patterns');
+                            // Fallback: look for any version-like pattern
+                            const fallbackPatterns = [
+                                /v(\d+\.\d+\.\d+(?:\.\d+)?)/i,
+                                /(\d+\.\d+\.\d+(?:\.\d+)?)/
+                            ];
+                            
+                            for (const pattern of fallbackPatterns) {
+                                const match = text.match(pattern);
+                                if (match) {
+                                    latest = match[0].startsWith('v') ? match[0] : `v${match[0]}`;
+                                    console.log('Found version with fallback pattern:', pattern, '->', latest);
+                                    break;
+                                }
                             }
                         }
                     } else {
@@ -3397,6 +3420,7 @@ class MusicPlayer {
             }
 
             // Fallback to client-side metadata extraction
+            console.log('Using client-side metadata extraction for file:', file.name);
             return await this.extractMetadataClientSide(file);
         } catch (error) {
             console.warn('Metadata extraction failed:', error);
@@ -3407,6 +3431,8 @@ class MusicPlayer {
     // Client-side metadata extraction using Web APIs
     async extractMetadataClientSide(file) {
         try {
+            console.log('Starting client-side metadata extraction for:', file.name, 'Size:', file.size);
+            
             const metadata = {
                 title: null,
                 artist: null,
@@ -3440,6 +3466,7 @@ class MusicPlayer {
 
             // Try to extract metadata from filename
             const filenameMetadata = this.parseFilenameMetadata(file.name);
+            console.log('Filename metadata extracted:', filenameMetadata);
             Object.assign(metadata, filenameMetadata);
 
             // Try to extract ID3 tags if it's an MP3 file
@@ -3454,6 +3481,7 @@ class MusicPlayer {
                 }
             }
 
+            console.log('Final metadata extracted:', metadata);
             return metadata;
         } catch (error) {
             console.warn('Client-side metadata extraction failed:', error);
