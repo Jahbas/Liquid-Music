@@ -1,5 +1,7 @@
 # 🎵 Liquid Glass Music Player
 
+[![Test Here](https://img.shields.io/badge/Test%20Here-Live%20Demo-brightgreen?style=for-the-badge&logo=github)](https://jahbas.github.io/Liquid-Music/)
+
 <div align="center">
 
 ![Liquid Glass Music Player](https://img.shields.io/badge/Status-Ready%20to%20Use-brightgreen)
